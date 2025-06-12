@@ -1,11 +1,12 @@
-// Enhanced config.js with better error handling, debugging, and authentication
-export const API_BASE_URL = 'http://localhost:5001';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
 
 // List of endpoints that do not require authentication
 const UNAUTHENTICATED_ENDPOINTS = [
   '/api/forgot-password/request',
   '/api/forgot-password/verify',
-  '/api/forgot-password/reset'
+  '/api/forgot-password/reset',
+  '/api/auth/login', // Added to support login without token
+  '/api/auth/register' // Added if you have a registration endpoint
 ];
 
 // Generic API call function

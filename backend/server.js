@@ -5,15 +5,15 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import serverless from "serverless-http"; // Add this package
 
-import profileRoutes from "../../hiddenmood/backend/routes/profile.js";
-import authRoutes from "../../hiddenmood/backend/routes/auth.js";
-import curhatRoutes from "../../hiddenmood/backend/routes/curhat.js";
-import historyRoutes from "../../hiddenmood/backend/routes/history.js";
-import dashboardRoutes from "../../hiddenmood/backend/routes/dashboard.js";
-import feedbackRoutes from "../../hiddenmood/backend/routes/feedback.js";
-import articlesRoutes from "../../hiddenmood/backend/routes/articles.js";
-import historyDetailRouter from "../../hiddenmood/backend/routes/historydetail.js";
-import forgotPasswordRouter from "../../hiddenmood/backend/routes/forgotpassword.js";
+import profileRoutes from "./routes/profile.js";
+import authRoutes from "./routes/auth.js";
+import curhatRoutes from "./routes/curhat.js";
+import historyRoutes from "./routes/history.js";
+import dashboardRoutes from "./routes/dashboard.js";
+import feedbackRoutes from "./routes/feedback.js";
+import articlesRoutes from "./routes/articles.js";
+import historyDetailRouter from "./routes/historydetail.js";
+import forgotPasswordRouter from "./routes/forgotpassword.js";
 
 dotenv.config();
 

@@ -33,7 +33,7 @@ function setupSearch() {
   const articlesSection = document.querySelector('.articles-section');
   if (articlesSection && !document.getElementById('search-input')) {
     const searchHTML = `
-      <div class="mb-6 max-w-md">
+      <div class="mb-6 max-w-md mx-auto"> <!-- Added mx-auto for centering -->
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@ function setupSearch() {
             </svg>
           </button>
         </div>
-        <div id="search-info" class="mt-2 text-sm text-gray-600 hidden">
+        <div id="search-info" class="mt-2 text-sm text-gray-600 hidden text-center"> <!-- Added text-center -->
           <span id="results-count"></span> articles found
         </div>
       </div>

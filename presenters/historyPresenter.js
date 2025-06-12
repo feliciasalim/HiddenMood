@@ -55,15 +55,26 @@ class HistoryPresenter {
   }
 
   groupFeedbacksByPeriod(feedbacks) {
-    const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' });
-    const today = new Date(now);
-    const yesterday = new Date(now);
+    // Since DB timestamps are already in Jakarta timezone, use them directly
+    const now = new Date();
+    
+    // Create date boundaries (date-only, no time)
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-    startOfWeek.setHours(0, 0, 0, 0);
+    
+    // Start of current week (Monday)
+    const startOfWeek = new Date(today);
+    const dayOfWeek = today.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
+    startOfWeek.setDate(today.getDate() - daysToMonday);
+    
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
+    
+    // Last month boundaries
+    const lastMonthStart = new Date(currentYear, currentMonth - 1, 1);
+    const lastMonthEnd = new Date(currentYear, currentMonth, 0); 
 
     const grouped = {
       today: [],
@@ -74,27 +85,33 @@ class HistoryPresenter {
     };
 
     feedbacks.forEach(feedback => {
-      let feedbackDate;
-      if (typeof feedback.created_at === 'string' && feedback.created_at.includes(' ')) {
-        feedbackDate = new Date(feedback.created_at + ' UTC');
-        feedbackDate = new Date(feedbackDate.toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-      } else {
-        feedbackDate = new Date(new Date(feedback.created_at).toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-      }
-      if (feedbackDate.getFullYear() === today.getFullYear() &&
-          feedbackDate.getMonth() === today.getMonth() &&
-          feedbackDate.getDate() === today.getDate()) {
+      // DB timestamp is already in Jakarta timezone, so use it directly
+      const feedbackDate = new Date(feedback.created_at);
+      
+      // Create date-only version for comparison
+      const feedbackDateOnly = new Date(
+        feedbackDate.getFullYear(), 
+        feedbackDate.getMonth(), 
+        feedbackDate.getDate()
+      );
+      
+      console.log('Original DB timestamp:', feedback.created_at, 'Parsed date:', feedbackDate, 'Date Only:', feedbackDateOnly);
+      
+      // Group by time periods
+      if (feedbackDateOnly.getTime() === today.getTime()) {
         grouped.today.push(feedback);
-      } else if (feedbackDate >= startOfWeek && feedbackDate <= today) {
+      } else if (feedbackDateOnly.getTime() === yesterday.getTime()) {
         grouped.thisWeek.push(feedback);
-      } else if (feedbackDate.getFullYear() === currentYear && feedbackDate.getMonth() === currentMonth - 1) {
+      } else if (feedbackDateOnly >= startOfWeek && feedbackDateOnly < today) {
+        grouped.thisWeek.push(feedback);
+      } else if (feedbackDateOnly >= lastMonthStart && feedbackDateOnly <= lastMonthEnd) {
         grouped.lastMonth.push(feedback);
-      } else if (feedbackDate.getFullYear() === currentYear) {
+      } else if (feedbackDateOnly.getFullYear() === currentYear && feedbackDateOnly < lastMonthStart) {
         grouped.earlierThisYear.push(feedback);
-      } else if (feedbackDate.getFullYear() === currentYear - 1) {
+      } else if (feedbackDateOnly.getFullYear() === currentYear - 1) {
         grouped.lastYear.push(feedback);
       } else {
-        const yearKey = feedbackDate.getFullYear().toString();
+        const yearKey = feedbackDateOnly.getFullYear().toString();
         if (!grouped[yearKey]) {
           grouped[yearKey] = [];
         }
@@ -253,7 +270,9 @@ class HistoryView {
       const stressLevel = item.stress_level || 'unknown';
       const emotion = item.emotion || 'neutral';
       const text = item.text || 'No description';
-      const date = new Date(new Date(item.created_at).toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
+      
+      // DB timestamp is already in Jakarta timezone, so use it directly
+      const date = new Date(item.created_at);
 
       card.innerHTML = `
         <div class="flex items-center justify-between">
@@ -374,16 +393,24 @@ class HistoryView {
   }
 
   formatDate(date) {
-    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
-    const diffTime = Math.abs(today - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-      return 'Today at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffDays === 2) {
-      return 'Yesterday at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffDays <= 7) {
-      return date.toLocaleDateString([], { weekday: 'long' }) + ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // DB timestamp is already in Jakarta timezone, so use it directly
+    const now = new Date();
+    
+    // Create date-only versions for comparison
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const diffTime = todayOnly.getTime() - dateOnly.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    if (diffDays === 0) {
+      return 'Today at ' + timeString;
+    } else if (diffDays === 1) {
+      return 'Yesterday at ' + timeString;
+    } else if (diffDays > 1 && diffDays <= 7) {
+      return date.toLocaleDateString([], { weekday: 'long' }) + ' at ' + timeString;
     } else {
       return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
     }

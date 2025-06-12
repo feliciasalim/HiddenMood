@@ -12,7 +12,7 @@ router.get("/summary", authenticateToken, async (req, res) => {
 
     const { data: history, error } = await supabase
       .from('history')
-      .select('stress_percent, emotion, created_at, text, feedback')
+      .select('stress_percent, emotion, created_at, text, feedback, stress_level')
       .eq('user_id', req.user.user_id)
       .gte('created_at', daysAgo.toISOString())
       .order('created_at', { ascending: false });
@@ -24,11 +24,12 @@ router.get("/summary", authenticateToken, async (req, res) => {
         averageStress: 0,
         emotionCounts: {},
         stressHistory: [],
-        latestEmotion: 'neutral',
+        latestEmotion: '',
         latestEmotionTime: null,
         weeklyCount: 0,
         totalCount: 0,
-        mostCommonEmotion: 'neutral',
+        mostCommonEmotion: '',
+        mostCommonStressLevel: '',
         tips: []
       });
     }
@@ -39,9 +40,21 @@ router.get("/summary", authenticateToken, async (req, res) => {
 
     const emotionCounts = {};
     history.forEach((h) => {
-      const emotion = h.emotion || "neutral";
+      const emotion = h.emotion || "No emotion entry";
       emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
     });
+
+    // Calculate most common stress level
+    const stressLevelCounts = {};
+    history.forEach((h) => {
+      if (h.stress_level) {
+        stressLevelCounts[h.stress_level] = (stressLevelCounts[h.stress_level] || 0) + 1;
+      }
+    });
+
+    const mostCommonStressLevel = Object.keys(stressLevelCounts).length > 0 
+      ? Object.keys(stressLevelCounts).reduce((a, b) => stressLevelCounts[a] > stressLevelCounts[b] ? a : b)
+      : '';
 
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -49,7 +62,7 @@ router.get("/summary", authenticateToken, async (req, res) => {
 
     const mostCommonEmotion = Object.keys(emotionCounts).length > 0 
       ? Object.keys(emotionCounts).reduce((a, b) => emotionCounts[a] > emotionCounts[b] ? a : b)
-      : 'neutral';
+      : '';
 
     const dailyData = {};
     const filteredHistory = history.filter(h => 
@@ -82,7 +95,7 @@ router.get("/summary", authenticateToken, async (req, res) => {
     });
 
     const latestEntry = history[0];
-    const latestEmotion = latestEntry?.emotion || 'neutral';
+    const latestEmotion = latestEntry?.emotion || 'No emotion entry';
     const latestEmotionTime = latestEntry?.created_at;
 
     const tips = [];
@@ -118,6 +131,7 @@ router.get("/summary", authenticateToken, async (req, res) => {
       weeklyCount,
       totalCount: history.length,
       mostCommonEmotion,
+      mostCommonStressLevel,
       tips: uniqueTips.length > 0 ? uniqueTips : defaultTips
     });
   } catch (error) {
@@ -172,4 +186,3 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
 });
 
 export default router;
-

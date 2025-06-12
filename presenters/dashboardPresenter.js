@@ -287,7 +287,6 @@ function updateStressChart() {
   
   const chartContext = ctx.getContext('2d');
   
-  // Show empty chart with grid instead of "No data" text
   if (dashboardData.stressHistory.length === 0) {
     chartInstances.stressChart = new Chart(chartContext, {
       type: 'line',

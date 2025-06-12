@@ -80,7 +80,6 @@ function displayFeedback(result) {
     const stressLevel = result.stress_level?.stress_level || 0;
     stressPercentEl.textContent = `${stressLevel}%`;
 
-    // Create donut chart SVG
     const radius = 50;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (stressLevel / 100) * circumference;
@@ -101,7 +100,6 @@ function displayFeedback(result) {
       </div>
     `;
 
-    // Update styles for positioning
     chartContainer.classList.add('relative');
     chartContainer.style.width = '120px';
     chartContainer.style.height = '120px';

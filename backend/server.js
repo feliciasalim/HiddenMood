@@ -43,9 +43,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", feedbackRoutes);
 app.use("/api", articlesRoutes);
 app.use("/api", historyDetailRouter);
-app.use("/api/forgot-password", forgotPasswordRouter); // Moved here
+app.use("/api/forgot-password", forgotPasswordRouter); 
 
-// Legacy route for debugging
 app.get("/", (req, res) => {
   res.json({ message: "Hidden Mood API is running" });
 });

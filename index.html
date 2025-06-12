@@ -77,10 +77,8 @@
   </footer>
 
   <script>
-    // Initialize isLoggedIn from sessionStorage to sync with app.js
     let isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
 
-    // Function to attach navbar event listeners
     function attachNavbarListeners() {
       const menuToggle = document.getElementById('menu-toggle');
       const navbarMenu = document.getElementById('navbar-menu');
@@ -110,7 +108,6 @@
       });
     }
 
-    // Function to load navbar based on login state
     async function updateNavbar() {
       const navbarContainer = document.getElementById('navbar-container');
       isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
@@ -123,7 +120,6 @@
         navbarContainer.innerHTML = html;
         attachNavbarListeners();
         
-        // Load user data for navbar if logged in
         if (isLoggedIn) {
           await loadUserDataForNavbar();
         }
@@ -133,7 +129,6 @@
       }
     }
 
-    // Function to load user data for navbar
     async function loadUserDataForNavbar() {
       const token = sessionStorage.getItem('token');
       if (!token) return;
@@ -158,14 +153,12 @@
       }
     }
 
-    // Function to toggle login state for testing (replace with actual login system)
     function toggleLoginState() {
       isLoggedIn = !isLoggedIn;
       sessionStorage.setItem("isLoggedIn", isLoggedIn.toString());
       updateNavbar();
     }
 
-    // Logout function
     function logout() {
       sessionStorage.removeItem("isLoggedIn");
       sessionStorage.removeItem("user");
@@ -176,7 +169,6 @@
       window.loadView('home');
     }
 
-    // Initial navbar load
     updateNavbar();
   </script>
 
@@ -292,7 +284,6 @@
         return userStr ? JSON.parse(userStr) : null;
     }
 
-    // Remove duplicate loadView since it's handled in app.js
 </script>
 
 </body>

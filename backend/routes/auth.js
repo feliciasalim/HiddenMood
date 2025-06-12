@@ -7,12 +7,11 @@ import { generateToken, generateId, validateEmail, validatePassword, validateNam
 
 const router = express.Router();
 
-// Configure multer for image uploads with better error handling
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
+        fileSize: 5 * 1024 * 1024, 
     },
     fileFilter: (req, file, cb) => {
         console.log("File filter check:", file.mimetype);
@@ -24,7 +23,6 @@ const upload = multer({
     }
 });
 
-// User Registration
 router.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -42,7 +40,6 @@ router.post("/register", async (req, res) => {
     }
 
     try {
-        // Check if user exists
         const { data: existingUser } = await supabase
             .from('users')
             .select('email')
@@ -53,13 +50,10 @@ router.post("/register", async (req, res) => {
             return res.status(400).json({ error: "Email is already registered" });
         }
 
-        // Hash password
         const passwordHash = await bcrypt.hash(password, 12);
 
-        // Generate user_id
         const user_id = generateId();
 
-        // Create user
         const { data: newUser, error } = await supabase
             .from('users')
             .insert({

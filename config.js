@@ -1,29 +1,25 @@
-// Enhanced config.js with better error handling, debugging, and authentication
 export const API_BASE_URL = 'https://capstone-himo.onrender.com';
 
-// List of endpoints that do not require authentication
 const UNAUTHENTICATED_ENDPOINTS = [
   '/api/forgot-password/request',
   '/api/forgot-password/verify',
   '/api/forgot-password/reset'
 ];
 
-// Generic API call function
 export async function apiCall(endpoint, options = {}) {
-  const baseUrl = API_BASE_URL; // Use the defined constant
+  const baseUrl = API_BASE_URL; 
   const token = sessionStorage.getItem('token');
 
-  // Conditionally add token only if the endpoint requires authentication
   const headers = {
     'Content-Type': 'application/json',
     ...(UNAUTHENTICATED_ENDPOINTS.includes(endpoint) ? {} : (token ? { 'Authorization': `Bearer ${token}` } : {})),
-    ...(options.headers || {}) // Merge any additional headers
+    ...(options.headers || {})
   };
 
-  const url = `${baseUrl}${endpoint}`; // Construct the full URL
+  const url = `${baseUrl}${endpoint}`;
 
   try {
-    console.log(`API Call: ${options.method || 'GET'} ${url}`); // Log the request
+    console.log(`API Call: ${options.method || 'GET'} ${url}`); 
 
     const response = await fetch(url, {
       ...options,
@@ -33,7 +29,7 @@ export async function apiCall(endpoint, options = {}) {
     if (!response.ok) {
       let errorText = '';
       try {
-        errorText = await response.text(); // Attempt to read error message
+        errorText = await response.text(); 
       } catch (e) {
         errorText = `Failed to read error response: ${e.message}`;
       }
@@ -47,7 +43,7 @@ export async function apiCall(endpoint, options = {}) {
     } else {
       const responseText = await response.text();
       console.warn(`Non-JSON response for ${endpoint}:`, responseText);
-      return responseText; // Or handle as needed
+      return responseText; 
     }
 
   } catch (error) {
@@ -56,7 +52,6 @@ export async function apiCall(endpoint, options = {}) {
   }
 }
 
-// Authenticated API call - explicitly requires token
 export async function authenticatedApiCall(endpoint, options = {}) {
   const token = sessionStorage.getItem('token');
 
@@ -64,7 +59,6 @@ export async function authenticatedApiCall(endpoint, options = {}) {
     throw new Error('No authentication token found. Please log in.');
   }
 
-  // Add the token to the headers if not already present
   const headers = {
     ...(options.headers || {}),
     'Authorization': `Bearer ${token}`
@@ -73,7 +67,6 @@ export async function authenticatedApiCall(endpoint, options = {}) {
   return apiCall(endpoint, { ...options, headers });
 }
 
-// Add a utility function to test the API connection
 export async function testApiConnection() {
   try {
     console.log('Testing API connection...');
@@ -86,7 +79,6 @@ export async function testApiConnection() {
   }
 }
 
-// Add a utility function to check server health
 export async function checkServerHealth() {
   try {
     console.log('Checking server health...');
@@ -99,20 +91,17 @@ export async function checkServerHealth() {
   }
 }
 
-// Utility function to check if user is authenticated
 export function isAuthenticated() {
   const token = sessionStorage.getItem('token');
   const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
   return !!(token && isLoggedIn);
 }
 
-// Utility function to get current user info
 export function getCurrentUser() {
   const userStr = sessionStorage.getItem('user');
   return userStr ? JSON.parse(userStr) : null;
 }
 
-// Utility function to clear authentication
 export function clearAuth() {
   sessionStorage.removeItem("isLoggedIn");
   sessionStorage.removeItem("user");

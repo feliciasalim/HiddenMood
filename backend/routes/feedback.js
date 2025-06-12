@@ -4,7 +4,6 @@ import { generateId } from "../utils/helpers.js";
 
 const router = express.Router();
 
-// Get all feedback (using history table for now)
 router.get("/feedback", async (req, res) => {
   try {
     const { data: history, error } = await supabase
@@ -14,10 +13,9 @@ router.get("/feedback", async (req, res) => {
 
     if (error) throw error;
 
-    // Transform to feedback format
     const feedback = history.map(h => ({
       id: h.history_id,
-      user_name: 'Anonymous', // Since we don't have user name in history
+      user_name: 'Anonymous', 
       text: h.text,
       analysis_result: { feedback: h.feedback },
       created_at: h.created_at
@@ -30,7 +28,6 @@ router.get("/feedback", async (req, res) => {
   }
 });
 
-// Create feedback (save as history entry)
 router.post("/feedback", async (req, res) => {
   const { user_name, text, analysis_result } = req.body;
 
@@ -39,7 +36,6 @@ router.post("/feedback", async (req, res) => {
   }
 
   try {
-    // Generate temporary user_id for feedback
     const temp_user_id = 'feedback_' + generateId();
     const history_id = generateId();
 
@@ -74,7 +70,6 @@ router.post("/feedback", async (req, res) => {
   }
 });
 
-// Get feedback by ID
 router.get("/feedback/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -104,7 +99,6 @@ router.get("/feedback/:id", async (req, res) => {
   }
 });
 
-// Delete feedback
 router.delete("/feedback/:id", async (req, res) => {
   const { id } = req.params;
 

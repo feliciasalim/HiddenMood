@@ -6,12 +6,11 @@ import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Configure multer for image uploads
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
     console.log("File filter check:", file.mimetype);
@@ -23,7 +22,6 @@ const upload = multer({
   },
 });
 
-// GET /api/profile - Fetch user profile
 router.get("/", authenticateToken, async (req, res) => {
   console.log("GET /api/profile called with user:", req.user.user_id);
   try {
@@ -55,7 +53,6 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /api/profile - Update user profile
 router.put("/", authenticateToken, upload.single("profileImage"), async (req, res) => {
   console.log("PUT /api/profile called for user:", req.user.user_id);
   try {
@@ -170,11 +167,9 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
   }
 });
 
-// DELETE /api/profile - Delete user account
 router.delete("/", authenticateToken, async (req, res) => {
   console.log("=== DELETE /api/profile called for user:", req.user.user_id);
   try {
-    // Verify user exists
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("user_id, img")
@@ -193,12 +188,11 @@ router.delete("/", authenticateToken, async (req, res) => {
 
     console.log("User found:", user.user_id);
 
-    // Delete history records
     const { data: historyData, error: historyError } = await supabase
       .from("history")
       .delete()
       .eq("user_id", req.user.user_id)
-      .select("history_id"); // Return deleted record IDs for logging
+      .select("history_id"); 
 
     if (historyError) {
       console.error("History delete error:", {
@@ -215,7 +209,6 @@ router.delete("/", authenticateToken, async (req, res) => {
 
     console.log("History records deleted:", historyData?.length || 0);
 
-    // Delete profile image from storage
     if (user.img && user.img.includes('profile-img/')) {
       try {
         const fileName = user.img.split('/').pop();
@@ -242,7 +235,6 @@ router.delete("/", authenticateToken, async (req, res) => {
       }
     }
 
-    // Delete user
     const { data: userData, error: userDeleteError } = await supabase
       .from("users")
       .delete()

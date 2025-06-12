@@ -21,7 +21,6 @@ export function renderDashboard() {
     });
 }
 
-// Load Chart.js dynamically
 function loadChartJS() {
   return new Promise((resolve, reject) => {
     if (window.Chart) {
@@ -37,7 +36,6 @@ function loadChartJS() {
   });
 }
 
-// Emotion emoji mapping
 const emotionEmojis = {
   'anxious': '😰',
   'depressed': '😔',
@@ -46,7 +44,6 @@ const emotionEmojis = {
   'lonely': '😐'
 };
 
-// Global dashboard data
 let dashboardData = {
   averageStress: 0,
   stressHistory: [],
@@ -127,7 +124,6 @@ async function loadRecentHistory(limit = 10) {
       history_id: item.history_id
     }));
 
-    // Extract recent activity (just text)
     dashboardData.recentActivity = data.slice(0, 5).map(item => ({
       date: item.created_at,
       text: item.text,
@@ -144,11 +140,9 @@ async function loadStressTips() {
   try {
     const tips = [];
 
-    // Get only the most recent feedback (first item since it's already sorted by most recent)
     if (dashboardData.recentPredictions.length > 0 && dashboardData.recentPredictions[0].feedback) {
       const feedback = dashboardData.recentPredictions[0].feedback;
       
-      // Extract the explanation part (after "Why you're getting this result:")
       const whyIndex = feedback.indexOf("Why you're getting this result:");
       const suggestionIndex = feedback.indexOf("Suggestions:");
       
@@ -156,13 +150,10 @@ async function loadStressTips() {
       let suggestion = "";
       
       if (whyIndex !== -1 && suggestionIndex !== -1) {
-        // Extract explanation (skip "Why you're getting this result:" text)
         explanation = feedback.substring(whyIndex + "Why you're getting this result:".length, suggestionIndex).trim();
         
-        // Extract suggestion (skip "Suggestions:" text)
         suggestion = feedback.substring(suggestionIndex + "Suggestions:".length).trim();
         
-        // Format as bullet points
         if (explanation) {
           tips.push(`${explanation}`);
         }
@@ -172,10 +163,8 @@ async function loadStressTips() {
       }
     }
 
-    // Set the formatted tips
     dashboardData.tips = tips;
     
-    // Fallback to default tips if none found
     if (dashboardData.tips.length === 0) {
       dashboardData.tips = [
         '• Take regular breaks throughout the day',
@@ -188,7 +177,6 @@ async function loadStressTips() {
     
   } catch (error) {
     console.error('Error loading stress tips:', error);
-    // Use fallback tips
     dashboardData.tips = [
       '• Take regular breaks throughout the day',
       '• Practice deep breathing exercises',
@@ -198,17 +186,12 @@ async function loadStressTips() {
   }
 }
 
-
-
-
-
 function updateStressLevel() {
   const stressEl = document.getElementById('stress-percentage');
   if (!stressEl) return;
   
   stressEl.textContent = `${dashboardData.averageStress}%`;
   
-  // Update stress level color based on percentage
   if (dashboardData.averageStress >= 70) {
     stressEl.className = 'text-4xl sm:text-6xl font-bold text-red-600 mb-3 sm:mb-4';
   } else if (dashboardData.averageStress >= 40) {
@@ -230,15 +213,12 @@ function updateLatestEmotion() {
 }
 
 function updateQuickStats() {
-  // Total Sessions
   const totalEl = document.getElementById('total-predictions');
   if (totalEl) totalEl.textContent = dashboardData.totalSessions;
 
-  // This Week (most frequent stress level)
   const weekEl = document.getElementById('week-predictions');
   if (weekEl) weekEl.textContent = dashboardData.weeklyStressLevel;
 
-  // Average Mood (most frequent emotion)
   const avgMoodEl = document.getElementById('avg-mood');
   if (avgMoodEl) {
     const mood = dashboardData.avgMood.charAt(0).toUpperCase() + dashboardData.avgMood.slice(1);
@@ -250,55 +230,45 @@ function updateEmotionTracker() {
   const ctx = document.getElementById('emotion-chart');
   if (!ctx || !window.Chart) return;
   
-  // Clean up existing chart
   if (chartInstances.emotionChart) {
     chartInstances.emotionChart.destroy();
   }
   
   const chartContext = ctx.getContext('2d');
   
-  // Define the 5 emotions (ensure they match the keys in emotionCounts)
   const emotions = ['depressed', 'panicked', 'anxious', 'overwhelmed', 'lonely'];
   
-  // Map counts from dashboardData.emotionCounts
   const counts = emotions.map(emotion => dashboardData.emotionCounts[emotion.charAt(0).toUpperCase() + emotion.slice(1)] || 0);
   
   const total = counts.reduce((sum, count) => sum + count, 0);
 
-  // Update total predictions in chart center
   const totalChartEl = document.getElementById('emotion-chart-total');
   if (totalChartEl) totalChartEl.textContent = total;
 
-  // Update individual emotion counts
   emotions.forEach(emotion => {
     const countEl = document.getElementById(`${emotion}-count`);
     if (countEl) countEl.textContent = dashboardData.emotionCounts[emotion.charAt(0).toUpperCase() + emotion.slice(1)] || 0;
   });
 
-  // Determine the darkest color for the highest count
   const colorScale = [
-    '#5e4fa2', // Darkest - most frequent
-    '#9e7bb5', // Medium
-    '#d4a5e3', // Light
-    '#e0b0e4', // Lighter
-    '#f1d4e0'  // Lightest
+    '#5e4fa2', 
+    '#9e7bb5', 
+    '#d4a5e3', 
+    '#e0b0e4', 
+    '#f1d4e0' 
   ];
 
-  // Create an array of emotion counts with their corresponding emotions
   const emotionCountsWithNames = emotions.map((emotion, index) => ({
     name: emotion,
     count: counts[index]
   }));
 
-  // Sort emotions by count in descending order
   emotionCountsWithNames.sort((a, b) => b.count - a.count);
 
-  // Assign colors based on sorted counts
   const assignedColors = emotionCountsWithNames.map((emotion, index) => {
-    return colorScale[index]; // Assign colors based on sorted order
+    return colorScale[index]; 
   });
 
-  // Create doughnut chart with assigned colors
   if (total > 0) {
     chartInstances.emotionChart = new Chart(chartContext, {
       type: 'doughnut',
@@ -322,7 +292,6 @@ function updateEmotionTracker() {
       }
     });
   } else {
-    // Show empty state
     chartContext.clearRect(0, 0, ctx.width, ctx.height);
     chartContext.fillStyle = '#6b7280';
     chartContext.font = '14px sans-serif';
@@ -336,7 +305,6 @@ function updateStressChart() {
   const ctx = document.getElementById('stress-chart');
   if (!ctx || !window.Chart) return;
   
-  // Clean up existing chart
   if (chartInstances.stressChart) {
     chartInstances.stressChart.destroy();
   }
@@ -344,7 +312,6 @@ function updateStressChart() {
   const chartContext = ctx.getContext('2d');
   
   if (dashboardData.stressHistory.length === 0) {
-    // Show empty state
     chartContext.clearRect(0, 0, ctx.width, ctx.height);
     chartContext.fillStyle = '#6b7280';
     chartContext.font = '14px sans-serif';
@@ -353,22 +320,16 @@ function updateStressChart() {
     return;
   }
   
-  // Process the stress history data
   const labels = dashboardData.stressHistory.map(item => {
-    // Handle different timestamp formats
     let date;
     if (typeof item.date === 'string') {
-      // If it's already a string, try to parse it
       date = new Date(item.date);
     } else if (typeof item.date === 'number') {
-      // If it's a timestamp (number), convert it
-      date = new Date(item.date * 1000); // Multiply by 1000 if it's in seconds
+      date = new Date(item.date * 1000); 
     } else {
-      // If it's already a Date object
       date = item.date;
     }
     
-    // Format the date
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
   
@@ -386,9 +347,9 @@ function updateStressChart() {
         tension: 0.4,
         fill: true,
         pointBackgroundColor: data.map(value => {
-          if (value >= 70) return '#dc2626'; // High - red
-          if (value >= 40) return '#f59e0b'; // Medium - amber
-          return '#10b981'; // Low - green
+          if (value >= 70) return '#dc2626'; 
+          if (value >= 40) return '#f59e0b'; 
+          return '#10b981'; 
         }),
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
@@ -449,7 +410,6 @@ function updatePredictionsTable() {
     const stressColor = prediction.stress_percent >= 70 ? 'text-red-600' : 
                        prediction.stress_percent >= 40 ? 'text-yellow-600' : 'text-green-600';
 
-    // Extract suggestion from feedback
     let suggestion = 'No suggestion available';
     if (prediction.feedback) {
       const suggestionIndex = prediction.feedback.toLowerCase().indexOf('suggestion');
@@ -463,13 +423,11 @@ function updatePredictionsTable() {
       }
     }
 
-    // Truncate text preview
     let textPreview = prediction.text || 'No text available';
     if (textPreview.length > 60) {
       textPreview = textPreview.substring(0, 60) + '...';
     }
 
-    // Format date properly
     let formattedDate;
     try {
       const date = new Date(prediction.date);
@@ -542,7 +500,6 @@ function updateRecentActivity() {
       textPreview = textPreview.substring(0, 80) + '...';
     }
     
-    // Format date properly
     let formattedDate;
     try {
       const date = new Date(activity.date);
@@ -567,9 +524,7 @@ function updateRecentActivity() {
   });
 }
 
-// Event Handlers
 function setupEventListeners() {
-  // Time filter change handler
   const timeFilter = document.getElementById('time-filter');
   if (timeFilter) {
     timeFilter.addEventListener('change', async function(e) {
@@ -577,7 +532,6 @@ function setupEventListeners() {
     });
   }
 
-  // Chart filter change handler
   const chartFilter = document.getElementById('chart-filter');
   if (chartFilter) {
     chartFilter.addEventListener('change', async function(e) {
@@ -585,7 +539,6 @@ function setupEventListeners() {
     });
   }
 
-  // Refresh button
   const refreshBtn = document.getElementById('refresh-dashboard');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', async () => {
@@ -603,13 +556,11 @@ async function refreshDashboardData() {
   try {
     showLoadingState();
     
-    // Load dashboard summary and recent history first
     await Promise.all([
       loadDashboardSummary(),
       loadRecentHistory()
     ]);
     
-    // Then load stress tips
     await loadStressTips();
     
     updateStressLevel();
@@ -617,7 +568,7 @@ async function refreshDashboardData() {
     updateStressChart();
     updateEmotionTracker();
     updatePredictionsTable();
-    updateTips(); // Don't forget to update the tips UI
+    updateTips(); 
     
     hideLoadingState();
   } catch (error) {
@@ -651,7 +602,6 @@ function showError(message) {
   }, 5000);
 }
 
-// Navigation Functions
 function setupNavigation() {
   const navLinks = [
     { selector: 'a[href="#home"]', view: 'home' },
@@ -677,7 +627,6 @@ function setupNavigation() {
 }
 
 function logout() {
-  // Clean up charts before logout
   Object.values(chartInstances).forEach(chart => {
     if (chart && typeof chart.destroy === 'function') {
       chart.destroy();
@@ -692,7 +641,6 @@ function logout() {
 }
 
 function loadView(view) {
-  // Clean up charts when leaving dashboard
   if (view !== 'dashboard') {
     Object.values(chartInstances).forEach(chart => {
       if (chart && typeof chart.destroy === 'function') {

@@ -48,26 +48,20 @@ function attachLoginListeners() {
       loginButton.disabled = true;
       loginButton.textContent = "Logging in...";
 
-      // apiCall already handles JSON parsing and error checking
       const data = await apiCall('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
 
-      // Success - use the updated login function
       if (data.token && data.user) {
-        // Call the existing login function with user data and token
         if (window.login) {
           window.login(data.user, data.token);
         }
 
-        // Fetch the full user profile to process profile picture
         await fetchUserProfile();
 
-        // Update navbar to reflect the profile picture
         await window.updateNavbar();
 
-        // Redirect to dashboard
         window.loadView('dashboard');
       }
 
@@ -81,7 +75,6 @@ function attachLoginListeners() {
     }
   });
 
-  // Handle "Go to Signup" link if it exists
   const signupLink = document.getElementById("signupLink");
   if (signupLink) {
     signupLink.addEventListener("click", (e) => {
@@ -92,7 +85,6 @@ function attachLoginListeners() {
     });
   }
 
-  // Handle "Forgot Password" link if it exists
   const forgotPasswordLink = document.getElementById("forgotPasswordLink");
   if (forgotPasswordLink) {
     forgotPasswordLink.addEventListener("click", (e) => {
@@ -104,7 +96,6 @@ function attachLoginListeners() {
   }
 }
 
-// Fetch user profile to process profile picture
 async function fetchUserProfile() {
   const token = sessionStorage.getItem('token');
   if (!token) {
@@ -127,7 +118,6 @@ async function fetchUserProfile() {
     }
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    // Fallback to cached user data
     const cachedUser = JSON.parse(sessionStorage.getItem('user') || '{}');
     if (cachedUser) {
       updateNavbarUI(cachedUser);
@@ -135,7 +125,6 @@ async function fetchUserProfile() {
   }
 }
 
-// Reuse handleProfileImageDisplay from account page
 function handleProfileImageDisplay(imageElement, user) {
   const defaultImage = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
 

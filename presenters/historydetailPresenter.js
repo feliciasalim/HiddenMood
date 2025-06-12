@@ -21,7 +21,6 @@ export async function renderHistoryDetail(historyId) {
       .then((html) => {
         document.getElementById("app").innerHTML = html;
         
-        // Setup navigation similar to feedback presenter
         setupNavigation();
         loadHistoryDetail(historyId);
       })

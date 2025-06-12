@@ -24,15 +24,12 @@ export function renderArticles() {
     });
 }
 
-// Global variables for search and filtering
 window.allArticles = [];
 window.filteredArticles = [];
 window.currentPage = 1;
 window.articlesPerPage = 12;
 
-// Setup search functionality
 function setupSearch() {
-  // Add search bar to the articles section if it doesn't exist
   const articlesSection = document.querySelector('.articles-section');
   if (articlesSection && !document.getElementById('search-input')) {
     const searchHTML = `
@@ -75,28 +72,24 @@ function setupSearch() {
   }
 }
 
-// Handle search input
 function handleSearch(event) {
   const query = event.target.value.toLowerCase().trim();
   const clearButton = document.getElementById('clear-search');
   const searchInfo = document.getElementById('search-info');
   const resultsCount = document.getElementById('results-count');
   
-  // Show/hide clear button
   if (query && clearButton) {
     clearButton.classList.remove('hidden');
   } else if (clearButton) {
     clearButton.classList.add('hidden');
   }
   
-  // Show/hide search info
   if (query && searchInfo) {
     searchInfo.classList.remove('hidden');
   } else if (searchInfo) {
     searchInfo.classList.add('hidden');
   }
   
-  // Filter articles
   if (query === '') {
     window.filteredArticles = window.allArticles;
   } else {
@@ -106,19 +99,15 @@ function handleSearch(event) {
     );
   }
   
-  // Update results count
   if (resultsCount) {
     resultsCount.textContent = window.filteredArticles.length;
   }
   
-  // Reset to first page
   window.currentPage = 1;
   
-  // Render results
   renderArticleCards(window.filteredArticles);
 }
 
-// Clear search
 function clearSearch() {
   const searchInput = document.getElementById('search-input');
   const clearButton = document.getElementById('clear-search');
@@ -133,12 +122,10 @@ function clearSearch() {
   renderArticleCards(window.filteredArticles);
 }
 
-// Enhanced initialization with better error handling
 async function initializeArticles() {
   const container = document.getElementById("articles-container");
   
   try {
-    // Show loading indicator
     if (container) {
       container.innerHTML = `
         <div class="flex justify-center items-center py-8">
@@ -172,7 +159,6 @@ async function initializeArticles() {
       return;
     }
 
-    // Store articles globally for search and pagination
     window.allArticles = articles;
     window.filteredArticles = articles;
     window.currentPage = 1;
@@ -201,7 +187,6 @@ async function initializeArticles() {
   }
 }
 
-// Enhanced fetch function with better error handling
 async function fetchArticles() {
   try {
     console.log("Making API call to /api/articles...");
@@ -217,7 +202,6 @@ async function fetchArticles() {
   } catch (error) {
     console.error("Error fetching articles:", error);
     
-    // Try to provide more specific error information
     if (error.message.includes('fetch')) {
       throw new Error('Unable to connect to server. Please check if the backend is running.');
     } else if (error.message.includes('JSON')) {
@@ -228,7 +212,6 @@ async function fetchArticles() {
   }
 }
 
-// Enhanced render function with responsive design and better styling
 function renderArticleCards(articles) {
   const container = document.getElementById("articles-container");
   if (!container) {
@@ -237,10 +220,8 @@ function renderArticleCards(articles) {
   }
 
   try {
-    // Update container classes for responsive grid
     container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-start";
     
-    // Show no results message if needed
     if (articles.length === 0) {
       container.innerHTML = `
         <div class="col-span-full text-center py-12">
@@ -268,17 +249,14 @@ function renderArticleCards(articles) {
         const card = document.createElement("div");
         card.className = "w-full max-w-sm bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100";
         
-        // Handle missing or invalid image URLs
         const imageUrl = article.img && article.img.trim() 
           ? article.img 
           : 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=300&h=200&fit=crop';
         
-        // Handle missing or invalid article links
         const articleLink = article.article_link && article.article_link.trim()
           ? article.article_link
           : '#';
         
-        // Truncate long titles and intros for mobile responsiveness
         const title = article.title ? 
           (article.title.length > 60 ? article.title.substring(0, 60) + '...' : article.title) 
           : 'Untitled Article';
@@ -328,7 +306,6 @@ function renderArticleCards(articles) {
   }
 }
 
-// Enhanced pagination with better styling and mobile responsiveness
 function renderPagination(articles) {
   const totalPages = Math.ceil(articles.length / window.articlesPerPage);
   const pagination = document.getElementById("pagination");
@@ -340,14 +317,13 @@ function renderPagination(articles) {
 
   if (totalPages <= 1) {
     pagination.innerHTML = "";
-    pagination.style.paddingBottom = "3rem"; // Add space below even when no pagination
+    pagination.style.paddingBottom = "3rem"; 
     return;
   }
 
   pagination.innerHTML = "";
   pagination.className = "flex flex-wrap justify-center items-center gap-2 mt-8 pb-12";
 
-  // Previous button
   if (window.currentPage > 1) {
     const prevButton = document.createElement("button");
     prevButton.innerHTML = `
@@ -364,13 +340,11 @@ function renderPagination(articles) {
     pagination.appendChild(prevButton);
   }
 
-  // Page numbers (show fewer on mobile)
   const isMobile = window.innerWidth < 640;
   const maxVisiblePages = isMobile ? 3 : 5;
   const startPage = Math.max(1, window.currentPage - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-  // First page and ellipsis
   if (startPage > 1) {
     const firstButton = createPageButton(1);
     pagination.appendChild(firstButton);
@@ -383,13 +357,11 @@ function renderPagination(articles) {
     }
   }
 
-  // Page range
   for (let i = startPage; i <= endPage; i++) {
     const button = createPageButton(i, i === window.currentPage);
     pagination.appendChild(button);
   }
 
-  // Last page and ellipsis
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) {
       const ellipsis = document.createElement("span");
@@ -402,7 +374,6 @@ function renderPagination(articles) {
     pagination.appendChild(lastButton);
   }
 
-  // Next button
   if (window.currentPage < totalPages) {
     const nextButton = document.createElement("button");
     nextButton.innerHTML = `
@@ -419,14 +390,12 @@ function renderPagination(articles) {
     pagination.appendChild(nextButton);
   }
 
-  // Page info (mobile-friendly)
   const pageInfo = document.createElement("div");
   pageInfo.textContent = `Page ${window.currentPage} of ${totalPages}`;
   pageInfo.className = "text-sm text-gray-500 mt-2 w-full text-center sm:w-auto sm:mt-0 sm:ml-4";
   pagination.appendChild(pageInfo);
 }
 
-// Helper function to create page buttons
 function createPageButton(pageNum, isActive = false) {
   const button = document.createElement("button");
   button.textContent = pageNum;

@@ -48,7 +48,7 @@ function setupEventListeners() {
 }
 
 async function handleSendCode(event, button) {
-  event.preventDefault(); // Prevent default form submission if applicable
+  event.preventDefault(); 
   const emailInput = document.getElementById("loginEmail");
   const email = emailInput?.value.trim();
   clearErrors();

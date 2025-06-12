@@ -7,7 +7,6 @@ router.get("/articles", async (req, res) => {
   try {
     console.log("Fetching articles from Supabase...");
     
-    // First, let's check if we can connect to Supabase
     const { data: articles, error } = await supabase
       .from('articles')
       .select('article_id, title, article_link, img, article_intro')
@@ -29,7 +28,7 @@ router.get("/articles", async (req, res) => {
 
     if (!articles || articles.length === 0) {
       console.log("No articles found in database");
-      return res.status(200).json([]); // Return empty array instead of 404
+      return res.status(200).json([]); 
     }
 
     console.log("Successfully fetched articles:", articles.length);

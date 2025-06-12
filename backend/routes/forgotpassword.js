@@ -6,7 +6,6 @@ import { rateLimit } from "express-rate-limit";
 
 const router = express.Router();
 
-// Rate limit to prevent abuse (100 requests per 15 minutes per IP)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -14,7 +13,6 @@ const limiter = rateLimit({
 });
 router.use(limiter);
 
-// SMTP configuration (replace with your credentials)
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -23,7 +21,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify SMTP configuration before use
 transporter.verify((error, success) => {
   if (error) {
     console.error("SMTP configuration error:", error.message, error.stack);
@@ -32,12 +29,10 @@ transporter.verify((error, success) => {
   }
 });
 
-// Generate a 6-digit code
 function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Validate password (same as profile.js)
 function validatePassword(password) {
   const minLength = 8;
   const hasLetter = /[a-zA-Z]/.test(password);
@@ -53,7 +48,6 @@ function validatePassword(password) {
   return { isValid: true, message: "" };
 }
 
-// POST /api/forgot-password/request - Send verification code
 router.post("/request", async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -61,7 +55,6 @@ router.post("/request", async (req, res) => {
   }
 
   try {
-    // Check if user exists
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("user_id, email")
@@ -73,11 +66,9 @@ router.post("/request", async (req, res) => {
       return res.status(404).json({ error: "Email not found" });
     }
 
-    // Generate code and set expiration
     const code = generateCode();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); 
 
-    // Store code in reset_codes table
     const { error: codeError } = await supabase
       .from("reset_codes")
       .insert({
@@ -94,7 +85,6 @@ router.post("/request", async (req, res) => {
       });
     }
 
-    // Send email
     const mailOptions = {
       from: process.env.SMTP_EMAIL,
       to: email,
@@ -123,7 +113,6 @@ router.post("/request", async (req, res) => {
   }
 });
 
-// POST /api/forgot-password/verify - Verify code
 router.post("/verify", async (req, res) => {
   const { email, code } = req.body;
   if (!email || !code) {
@@ -131,7 +120,6 @@ router.post("/verify", async (req, res) => {
   }
 
   try {
-    // Check if code is valid
     const { data: resetCode, error: codeError } = await supabase
       .from("reset_codes")
       .select("id, code, expires_at, used")
@@ -146,7 +134,6 @@ router.post("/verify", async (req, res) => {
       return res.status(400).json({ error: "Invalid or expired code" });
     }
 
-    // Mark code as used
     const { error: updateError } = await supabase
       .from("reset_codes")
       .update({ used: true })
@@ -165,7 +152,6 @@ router.post("/verify", async (req, res) => {
   }
 });
 
-// POST /api/forgot-password/reset - Reset password
 router.post("/reset", async (req, res) => {
   const { email, newPassword } = req.body;
   if (!email || !newPassword) {
@@ -173,13 +159,11 @@ router.post("/reset", async (req, res) => {
   }
 
   try {
-    // Validate password
     const passwordValidation = validatePassword(newPassword);
     if (!passwordValidation.isValid) {
       return res.status(400).json({ error: passwordValidation.message });
     }
 
-    // Check if user exists
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("user_id, password")
@@ -191,16 +175,13 @@ router.post("/reset", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if new password is different
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
     if (isSamePassword) {
       return res.status(400).json({ error: "New password cannot be the same as the current password" });
     }
 
-    // Hash new password
     const passwordHash = await bcrypt.hash(newPassword, 12);
 
-    // Update password
     const { error: updateError } = await supabase
       .from("users")
       .update({ password: passwordHash })

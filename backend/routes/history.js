@@ -4,7 +4,6 @@ import { authenticateToken } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Get user's history
 router.get("/history", authenticateToken, async (req, res) => {
   try {
     const { data: history, error } = await supabase
@@ -22,13 +21,11 @@ router.get("/history", authenticateToken, async (req, res) => {
   }
 });
 
-// Get single history item by ID
 router.get("/history/:historyId", authenticateToken, async (req, res) => {
   try {
     const { historyId } = req.params;
     console.log(`Fetching history item: historyId=${historyId}, userId=${req.user.user_id}`);
 
-    // Validate historyId format (assuming it's a number or UUID)
     if (!historyId || historyId === 'undefined' || historyId === 'null') {
       return res.status(400).json({ error: "Invalid history ID" });
     }

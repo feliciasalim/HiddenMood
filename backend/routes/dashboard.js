@@ -44,7 +44,6 @@ router.get("/summary", authenticateToken, async (req, res) => {
       emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
     });
 
-    // Calculate most common stress level
     const stressLevelCounts = {};
     history.forEach((h) => {
       if (h.stress_level) {

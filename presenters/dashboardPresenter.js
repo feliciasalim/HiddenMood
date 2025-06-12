@@ -47,7 +47,7 @@ let dashboardData = {
   averageStress: 0,
   stressHistory: [],
   emotionCounts: {},
-  latestEmotion: 'neutral',
+  latestEmotion: '',
   recentPredictions: [],
   tips: [],
   totalSessions: 0,
@@ -61,15 +61,12 @@ let chartInstances = {};
 async function initializeDashboard() {
   try {
     showLoadingState();
-    
     await Promise.all([
       loadDashboardSummary(),
-      loadRecentHistory(),
-      loadStressHistory() // Separate call for stress history
+      loadRecentHistory()
     ]);
 
     await loadStressTips();
-
     updateStressLevel();
     updateLatestEmotion();
     updateQuickStats();
@@ -78,9 +75,7 @@ async function initializeDashboard() {
     updatePredictionsTable();
     updateTips();
     updateRecentActivity();
-    
     setupEventListeners();
-    
     hideLoadingState();
     
   } catch (error) {
@@ -97,10 +92,11 @@ async function loadDashboardSummary() {
     
     dashboardData.averageStress = data.averageStress || 0;
     dashboardData.emotionCounts = data.emotionCounts || {};
-    dashboardData.latestEmotion = data.latestEmotion || 'neutral';
+    dashboardData.stressHistory = data.stressHistory || [];
+    dashboardData.latestEmotion = data.latestEmotion || 'No data available';
     dashboardData.totalSessions = data.totalCount || 0;
-    dashboardData.weeklyStressLevel = data.mostCommonStressLevel || 'Low';
-    dashboardData.avgMood = data.mostCommonEmotion || 'neutral';
+    dashboardData.weeklyStressLevel = data.mostCommonStressLevel || '-';
+    dashboardData.avgMood = data.mostCommonEmotion || '-';
     
   } catch (error) {
     console.error('Error loading dashboard summary:', error);
@@ -122,7 +118,7 @@ async function loadRecentHistory(limit = 10) {
       history_id: item.history_id
     }));
 
-    dashboardData.recentActivity = data.slice(0, 5).map(item => ({
+    dashboardData.recentActivity = data.slice(0, 3).map(item => ({
       date: item.created_at,
       text: item.text,
       emotion: item.emotion
@@ -132,44 +128,6 @@ async function loadRecentHistory(limit = 10) {
     console.error('Error loading recent history:', error);
     throw error;
   }
-}
-
-// NEW: Separate function to load stress history with proper filtering
-async function loadStressHistory() {
-  try {
-    const days = getCurrentChartFilterDays();
-    const data = await authenticatedApiCall(`/api/dashboard/stress-history?days=${days}`, 'GET');
-    
-    // Process and sort the stress history data
-    dashboardData.stressHistory = (data || [])
-      .map(item => ({
-        date: new Date(item.created_at || item.date),
-        value: item.stress_percent || item.value || 0,
-        stress_level: item.stress_level
-      }))
-      .sort((a, b) => a.date - b.date); // Sort by date ascending
-    
-  } catch (error) {
-    console.error('Error loading stress history:', error);
-    // Fallback: generate mock data based on recent predictions if API fails
-    generateFallbackStressHistory();
-  }
-}
-
-// Fallback function to generate stress history from recent predictions
-function generateFallbackStressHistory() {
-  const days = getCurrentChartFilterDays();
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
-  
-  dashboardData.stressHistory = dashboardData.recentPredictions
-    .filter(pred => new Date(pred.date) >= cutoffDate)
-    .map(pred => ({
-      date: new Date(pred.date),
-      value: pred.stress_percent || 0,
-      stress_level: pred.stress_level
-    }))
-    .sort((a, b) => a.date - b.date);
 }
 
 async function loadStressTips() {
@@ -200,24 +158,9 @@ async function loadStressTips() {
 
     dashboardData.tips = tips;
     
-    if (dashboardData.tips.length === 0) {
-      dashboardData.tips = [
-        '• Take regular breaks throughout the day',
-        '• Practice deep breathing exercises',
-        '• Maintain a consistent sleep schedule',
-        '• Engage in physical activities',
-        '• Try meditation or mindfulness exercises'
-      ];
-    }
-    
   } catch (error) {
     console.error('Error loading stress tips:', error);
-    dashboardData.tips = [
-      '• Take regular breaks throughout the day',
-      '• Practice deep breathing exercises',
-      '• Maintain a consistent sleep schedule',
-      '• Engage in physical activities'
-    ];
+    dashboardData.tips = [];
   }
 }
 
@@ -226,7 +169,6 @@ function updateStressLevel() {
   if (!stressEl) return;
   
   stressEl.textContent = `${dashboardData.averageStress}%`;
-  
   if (dashboardData.averageStress >= 70) {
     stressEl.className = 'text-4xl sm:text-6xl font-bold text-red-600 mb-3 sm:mb-4';
   } else if (dashboardData.averageStress >= 40) {
@@ -243,7 +185,7 @@ function updateLatestEmotion() {
   if (!emojiEl || !textEl) return;
   
   const emotion = dashboardData.latestEmotion.toLowerCase();
-  emojiEl.textContent = emotionEmojis[emotion] || '😐';
+  emojiEl.textContent = emotionEmojis[emotion] || '-';
   textEl.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
 }
 
@@ -272,7 +214,9 @@ function updateEmotionTracker() {
   const chartContext = ctx.getContext('2d');
   
   const emotions = ['depressed', 'panicked', 'anxious', 'overwhelmed', 'lonely'];
+  
   const counts = emotions.map(emotion => dashboardData.emotionCounts[emotion.charAt(0).toUpperCase() + emotion.slice(1)] || 0);
+  
   const total = counts.reduce((sum, count) => sum + count, 0);
 
   const totalChartEl = document.getElementById('emotion-chart-total');
@@ -283,7 +227,13 @@ function updateEmotionTracker() {
     if (countEl) countEl.textContent = dashboardData.emotionCounts[emotion.charAt(0).toUpperCase() + emotion.slice(1)] || 0;
   });
 
-  const colorScale = ['#5e4fa2', '#9e7bb5', '#d4a5e3', '#e0b0e4', '#f1d4e0'];
+  const colorScale = [
+    '#5e4fa2', 
+    '#9e7bb5', 
+    '#d4a5e3', 
+    '#e0b0e4',
+    '#f1d4e0'  
+  ];
 
   const emotionCountsWithNames = emotions.map((emotion, index) => ({
     name: emotion,
@@ -291,7 +241,10 @@ function updateEmotionTracker() {
   }));
 
   emotionCountsWithNames.sort((a, b) => b.count - a.count);
-  const assignedColors = emotionCountsWithNames.map((emotion, index) => colorScale[index]);
+
+  const assignedColors = emotionCountsWithNames.map((emotion, index) => {
+    return colorScale[index]; 
+  });
 
   if (total > 0) {
     chartInstances.emotionChart = new Chart(chartContext, {
@@ -320,11 +273,10 @@ function updateEmotionTracker() {
     chartContext.fillStyle = '#6b7280';
     chartContext.font = '14px sans-serif';
     chartContext.textAlign = 'center';
-    chartContext.fillText('No data available', ctx.width / 2, ctx.height / 2);
+    chartContext.fillText('', ctx.width / 2, ctx.height / 2);
   }
 }
 
-// FIXED: Improved stress chart function
 function updateStressChart() {
   const ctx = document.getElementById('stress-chart');
   if (!ctx || !window.Chart) return;
@@ -335,24 +287,64 @@ function updateStressChart() {
   
   const chartContext = ctx.getContext('2d');
   
+  // Show empty chart with grid instead of "No data" text
   if (dashboardData.stressHistory.length === 0) {
-    chartContext.clearRect(0, 0, ctx.width, ctx.height);
-    chartContext.fillStyle = '#6b7280';
-    chartContext.font = '14px sans-serif';
-    chartContext.textAlign = 'center';
-    chartContext.fillText('No stress data available', ctx.width / 2, ctx.height / 2);
+    chartInstances.stressChart = new Chart(chartContext, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Stress Level (%)',
+          data: [],
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              }
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
     return;
   }
   
-  // Process the data for the chart
-  const processedData = processStressHistoryForChart(dashboardData.stressHistory);
-  
-  const labels = processedData.map(item => {
-    const date = new Date(item.date);
+  const labels = dashboardData.stressHistory.map(item => {
+    let date;
+    if (typeof item.date === 'string') {
+      date = new Date(item.date);
+    } else if (typeof item.date === 'number') {
+      date = new Date(item.date * 1000); 
+    } else {
+      date = item.date;
+    }
+    
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
   
-  const data = processedData.map(item => item.value);
+  const data = dashboardData.stressHistory.map(item => item.value || item.stress_percent || 0);
 
   chartInstances.stressChart = new Chart(chartContext, {
     type: 'line',
@@ -367,32 +359,20 @@ function updateStressChart() {
         fill: true,
         pointBackgroundColor: data.map(value => {
           if (value >= 70) return '#dc2626'; 
-          if (value >= 40) return '#f59e0b'; 
-          return '#10b981'; 
+          if (value >= 40) return '#f59e0b';
+          return '#10b981';
         }),
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
+        pointRadius: 4
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: {
-        intersect: false,
-        mode: 'index'
-      },
       plugins: {
         legend: {
           display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return `Stress: ${context.parsed.y}%`;
-            }
-          }
         }
       },
       scales: {
@@ -403,9 +383,6 @@ function updateStressChart() {
             callback: function(value) {
               return value + '%';
             }
-          },
-          grid: {
-            color: 'rgba(0, 0, 0, 0.1)'
           }
         },
         x: {
@@ -416,51 +393,6 @@ function updateStressChart() {
       }
     }
   });
-}
-
-// NEW: Function to process stress history data for chart display
-function processStressHistoryForChart(stressHistory) {
-  if (!stressHistory || stressHistory.length === 0) {
-    return [];
-  }
-
-  const days = getCurrentChartFilterDays();
-  
-  // Group data by day and calculate daily averages
-  const dailyData = new Map();
-  
-  stressHistory.forEach(item => {
-    const date = new Date(item.date);
-    const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-    
-    if (!dailyData.has(dateKey)) {
-      dailyData.set(dateKey, {
-        date: date,
-        values: [],
-        total: 0,
-        count: 0
-      });
-    }
-    
-    const dayData = dailyData.get(dateKey);
-    dayData.values.push(item.value);
-    dayData.total += item.value;
-    dayData.count += 1;
-  });
-  
-  // Convert to array and calculate averages
-  const processedData = Array.from(dailyData.values())
-    .map(dayData => ({
-      date: dayData.date,
-      value: Math.round(dayData.total / dayData.count)
-    }))
-    .sort((a, b) => a.date - b.date);
-  
-  // Limit to the selected number of days
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - days);
-  
-  return processedData.filter(item => item.date >= cutoffDate);
 }
 
 function updatePredictionsTable() {
@@ -547,10 +479,19 @@ function updateTips() {
   const tipsEl = document.getElementById('stress-tips');
   if (!tipsEl) return;
   
+  // Clear existing content
   tipsEl.innerHTML = '';
+  
+  if (dashboardData.tips.length === 0) {
+    // Show "No recent feedback" without bullet points
+    tipsEl.innerHTML = '<div class="text-sm text-gray-600">No recent feedback available</div>';
+    return;
+  }
+  
+  // Show tips with bullet points
   dashboardData.tips.forEach(tip => {
-    const li = document.createElement('li');
-    li.className = 'flex items-start';
+    const li = document.createElement('div');
+    li.className = 'flex items-start mb-3';
     li.innerHTML = `
       <span class="flex-shrink-0 w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3"></span>
       <span class="text-sm text-gray-700">${tip}</span>
@@ -603,22 +544,11 @@ function updateRecentActivity() {
   });
 }
 
-// FIXED: Improved event listener setup
 function setupEventListeners() {
   const timeFilter = document.getElementById('time-filter');
   if (timeFilter) {
     timeFilter.addEventListener('change', async function(e) {
-      console.log('Time filter changed to:', e.target.value);
       await refreshDashboardData();
-    });
-  }
-
-  const chartFilter = document.getElementById('chart-filter');
-  if (chartFilter) {
-    chartFilter.addEventListener('change', async function(e) {
-      console.log('Chart filter changed to:', e.target.value);
-      // Only refresh stress chart data when chart filter changes
-      await refreshStressChart();
     });
   }
 
@@ -635,47 +565,22 @@ function getCurrentFilterDays() {
   return timeFilter ? parseInt(timeFilter.value) : 30;
 }
 
-// NEW: Separate function to get chart filter days
-function getCurrentChartFilterDays() {
-  const chartFilter = document.getElementById('chart-filter');
-  return chartFilter ? parseInt(chartFilter.value) : 30;
-}
-
-// NEW: Function to refresh only stress chart data
-async function refreshStressChart() {
-  try {
-    showLoadingState();
-    
-    await loadStressHistory();
-    updateStressChart();
-    
-    hideLoadingState();
-  } catch (error) {
-    console.error('Error refreshing stress chart:', error);
-    hideLoadingState();
-    showError('Failed to refresh chart data');
-  }
-}
-
 async function refreshDashboardData() {
   try {
     showLoadingState();
     
     await Promise.all([
       loadDashboardSummary(),
-      loadRecentHistory(),
-      loadStressHistory()
+      loadRecentHistory()
     ]);
     
     await loadStressTips();
-    
     updateStressLevel();
     updateQuickStats();
     updateStressChart();
     updateEmotionTracker();
     updatePredictionsTable();
     updateTips(); 
-    
     hideLoadingState();
   } catch (error) {
     console.error('Error refreshing dashboard:', error);

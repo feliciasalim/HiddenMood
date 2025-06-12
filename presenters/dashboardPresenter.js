@@ -478,12 +478,10 @@ function updateTips() {
   const tipsEl = document.getElementById('stress-tips');
   if (!tipsEl) return;
   
-  // Clear existing content
   tipsEl.innerHTML = '';
   
   if (dashboardData.tips.length === 0) {
-    // Show "No recent feedback" without bullet points
-    tipsEl.innerHTML = '<div class="text-sm text-gray-600">No recent feedback available</div>';
+    tipsEl.innerHTML = '<div class="text-sm text-gray-600 text-center">No recent feedback available</div>';
     return;
   }
   

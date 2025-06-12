@@ -63,7 +63,7 @@ router.post("/request", async (req, res) => {
 
     if (userError || !user) {
       console.error("User fetch error:", userError?.message || "No user found");
-      return res.status(404).json({ error: "Email not found" });
+      return res.send("Email not found");
     }
 
     const code = generateCode();

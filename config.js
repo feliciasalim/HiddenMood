@@ -1,5 +1,5 @@
 // Enhanced config.js with better error handling, debugging, and authentication
-export const API_BASE_URL = 'https://capstone-himo.onrender.com/';
+export const API_BASE_URL = 'https://capstone-himo.onrender.com';
 
 // List of endpoints that do not require authentication
 const UNAUTHENTICATED_ENDPOINTS = [

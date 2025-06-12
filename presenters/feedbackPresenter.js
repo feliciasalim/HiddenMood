@@ -176,7 +176,7 @@ function populateKeywordsAndAnalysis(result) {
 export class FeedbackPresenter {
   async getFeedbackHistory() {
     try {
-      const response = await fetch("http://localhost:5001/api/submissions");
+      const response = await fetch("https://capstone-himo.onrender.com/api/submissions");
       if (!response.ok) throw new Error("Failed to fetch feedback history");
       return await response.json();
     } catch (err) {

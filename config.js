@@ -1,12 +1,11 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+// Enhanced config.js with better error handling, debugging, and authentication
+export const API_BASE_URL = 'https://hiddenmood.netlify.app/';
 
 // List of endpoints that do not require authentication
 const UNAUTHENTICATED_ENDPOINTS = [
   '/api/forgot-password/request',
   '/api/forgot-password/verify',
-  '/api/forgot-password/reset',
-  '/api/auth/login', // Added to support login without token
-  '/api/auth/register' // Added if you have a registration endpoint
+  '/api/forgot-password/reset'
 ];
 
 // Generic API call function

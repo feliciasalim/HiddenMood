@@ -5,15 +5,15 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import serverless from "serverless-http"; // Add this package
 
-import profileRoutes from "./routes/profile.js";
-import authRoutes from "./routes/auth.js";
-import curhatRoutes from "./routes/curhat.js";
-import historyRoutes from "./routes/history.js";
-import dashboardRoutes from "./routes/dashboard.js";
-import feedbackRoutes from "./routes/feedback.js";
-import articlesRoutes from "./routes/articles.js";
-import historyDetailRouter from "./routes/historydetail.js";
-import forgotPasswordRouter from "./routes/forgotpassword.js";
+import profileRoutes from "../../routes/profile.js";
+import authRoutes from "../../routes/auth.js";
+import curhatRoutes from "../../routes/curhat.js";
+import historyRoutes from "../../routes/history.js";
+import dashboardRoutes from "../../routes/dashboard.js";
+import feedbackRoutes from "../../routes/feedback.js";
+import articlesRoutes from "../../routes/articles.js";
+import historyDetailRouter from "../../routes/historydetail.js";
+import forgotPasswordRouter from "../../routes/forgotpassword.js";
 
 dotenv.config();
 

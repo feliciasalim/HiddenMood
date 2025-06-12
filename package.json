@@ -29,6 +29,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
     "nodemailer": "^7.0.3",
+    "serverless-http": "^3.2.0",
     "sharp": "^0.34.2",
     "uuid": "^11.1.0",
     "vite": "^6.3.5"

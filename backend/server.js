@@ -3,27 +3,27 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import serverless from "serverless-http"; // Add this package
 
-import profileRoutes from "./routes/profile.js";
-import authRoutes from "./routes/auth.js";
-import curhatRoutes from "./routes/curhat.js";
-import historyRoutes from "./routes/history.js";
-import dashboardRoutes from "./routes/dashboard.js";
-import feedbackRoutes from "./routes/feedback.js";
-import articlesRoutes from "./routes/articles.js";
-import historyDetailRouter from "./routes/historydetail.js";
-import forgotPasswordRouter from "./routes/forgotpassword.js";
+import profileRoutes from "../../hiddenmood/backend/routes/profile.js";
+import authRoutes from "../../hiddenmood/backend/routes/auth.js";
+import curhatRoutes from "../../hiddenmood/backend/routes/curhat.js";
+import historyRoutes from "../../hiddenmood/backend/routes/history.js";
+import dashboardRoutes from "../../hiddenmood/backend/routes/dashboard.js";
+import feedbackRoutes from "../../hiddenmood/backend/routes/feedback.js";
+import articlesRoutes from "../../hiddenmood/backend/routes/articles.js";
+import historyDetailRouter from "../../hiddenmood/backend/routes/historydetail.js";
+import forgotPasswordRouter from "../../hiddenmood/backend/routes/forgotpassword.js";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors({
-  origin: 'http://localhost:5501',
+  origin: ['http://localhost:5501', 'https://hiddenmood.netlify.app'], // Add your Netlify domain
   credentials: true
 }));
 app.use(express.json());
@@ -32,7 +32,7 @@ app.use('/presenters', express.static(path.join(__dirname, 'presenters')));
 app.use('/views', express.static('views'));
 
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "../views"));
+app.set("views", path.join(__dirname, "../../views"));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -43,13 +43,12 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api", feedbackRoutes);
 app.use("/api", articlesRoutes);
 app.use("/api", historyDetailRouter);
-app.use("/api/forgot-password", forgotPasswordRouter); // Moved here
+app.use("/api/forgot-password", forgotPasswordRouter);
 
 // Legacy route for debugging
 app.get("/", (req, res) => {
   res.json({ message: "Hidden Mood API is running" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server is running on http://localhost:${PORT}`);
-});
+// Export as a serverless function
+export const handler = serverless(app);

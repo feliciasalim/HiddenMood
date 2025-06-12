@@ -1,0 +1,32 @@
+<main class="bg-gray-50 font-sans text-gray-800 min-h-screen w-full m-0 py-6 px-6 sm:px-8 lg:px-12 xl:py-20">
+    <section class="result-card max-w-3xl mx-auto my-8 bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="bg-violet-800 text-white px-6 py-3 text-base font-bold">Results</div>
+        <div class="flex flex-col items-center gap-8 p-8 md:flex-row md:items-start">
+            <div id="donut-container" class="w-28 h-28 flex items-center justify-center mx-auto">
+                <div id="percentage" class="hidden">0%</div>
+            </div>
+            <div class="flex-1 text-center md:text-left">
+                <h2 id="stress-title" class="text-xl font-semibold mb-1">Low</h2>
+                <span id="emotion-badge"
+                    class="inline-block bg-violet-800 text-white rounded-full px-3 py-1 text-sm">Emotion:
+                    Overwhelmed</span>
+                <p id="user-input" class="text-gray-700">No input provided.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="feedback-sections grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto py-6">
+        <div class="reason-box bg-white rounded-xl border border-gray-300 shadow">
+            <h3 class="bg-violet-800 text-white rounded-t-xl px-4 py-3 text-base font-semibold">Feedback</h3>
+            <p class="p-4" id="analysis-text"></p>
+        </div>
+
+        <div class="video-box bg-white rounded-xl border border-gray-300 shadow">
+            <h3 class="bg-violet-800 text-white rounded-t-xl px-4 py-3 text-base font-semibold">Video Recommendation</h3>
+            <div class="video-embed h-40 bg-gray-300 m-4 rounded-lg flex items-center justify-center text-gray-600">
+            </div>
+            <div class="video-embed h-40 bg-gray-300 m-4 rounded-lg flex items-center justify-center text-gray-600">
+            </div>
+        </div>
+    </section>
+</main>

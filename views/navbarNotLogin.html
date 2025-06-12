@@ -1,0 +1,48 @@
+<div class="navbar flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200 relative">
+  <a href="#" onclick="loadView('home')" class="ml-6">
+    <img src="assets/icon.svg" alt="HiMO Logo" class="h-10" />
+  </a>
+
+  <button id="menu-toggle" class="lg:hidden text-gray-800 focus:outline-none mr-4">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+         viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+
+  <nav id="navbar-menu"
+       class="hidden absolute top-full left-0 w-full bg-white shadow-md px-8 py-4 z-10 
+              flex-col gap-4
+              lg:flex lg:flex-row lg:items-center lg:gap-10 lg:shadow-none lg:bg-transparent lg:py-0 lg:px-0 lg:w-auto lg:relative lg:translate-x-0">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-10">
+      <a href="#" onclick="loadView('home')" class="text-gray-800 font-medium hover:text-violet-800 transition">Home</a>
+      <a href="#" onclick="loadView('home', 'about')" class="text-gray-800 font-medium hover:text-violet-800 transition">About</a>
+      <a href="#" onclick="loadView('home', 'contact')" class="text-gray-800 font-medium hover:text-violet-800 transition">Contact Us</a>
+      <a href="#" onclick="loadView('articles')" class="text-gray-800 font-medium hover:text-violet-800 transition">Articles</a>
+      <a href="#facilities" class="text-gray-800 font-medium hover:text-violet-800 transition">Health Facilities</a>
+    </div>
+
+    <div class="flex flex-col gap-4 mt-4 lg:hidden">
+      <a href="#" onclick="loadView('login'); document.getElementById('navbar-menu').classList.add('hidden');"
+         class="w-full text-center px-4 py-2 bg-violet-800 text-white font-medium rounded hover:bg-violet-900 transition">
+        Log In
+      </a>
+      <a href="#" onclick="loadView('signup'); document.getElementById('navbar-menu').classList.add('hidden');"
+         class="w-full text-center px-4 py-2 border border-violet-800 text-violet-800 font-medium rounded hover:bg-violet-50 transition">
+        Register
+      </a>
+    </div>
+  </nav>
+
+  <div class="hidden lg:flex gap-5 items-center mr-6">
+    <a href="#" onclick="loadView('login')"
+       class="w-28 px-4 py-2 bg-violet-800 text-white font-medium rounded hover:bg-violet-900 transition text-center">
+      Log In
+    </a>
+    <a href="#" onclick="loadView('signup')"
+       class="w-28 px-4 py-2 border border-violet-800 text-violet-800 font-medium rounded hover:bg-violet-50 transition text-center">
+      Register
+    </a>
+  </div>
+</div>

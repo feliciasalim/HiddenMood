@@ -1,0 +1,37 @@
+<div class="curhat-page bg-white text-gray-900 min-h-screen w-full m-0 px-4 sm:px-6 md:px-8 ">
+  <main>
+    <div class="curhat-container max-w-3xl mx-auto my-10 sm:my-20 p-4 sm:p-6 md:p-8 bg-white text-center">
+
+      <div id="spinner" class="hidden fixed inset-0 bg-white bg-opacity-75 flex justify-center items-center z-50">
+        <img src="assets/loading.gif" alt="Loading..." class="w-16 h-16">
+      </div>
+
+      <h2 class="text-3xl sm:text-4xl mb-4 font-bold">
+        How do you <span class="text-violet-600">feel</span> today?
+      </h2>
+      <p class="text-base sm:text-lg text-gray-600 pb-6">
+        Tell us how you feel as detailed as possible! Don’t worry,
+        your data is safe and won’t be shared with anyone.
+      </p>
+      <textarea
+        id="curhatInput"
+        placeholder="Insert your text here"
+        class="w-full h-48 sm:h-64 mt-4 p-4 rounded-md border border-gray-300 resize-none text-base sm:text-lg font-sans"
+      ></textarea>
+      <p id="result" class="mt-4 text-sm sm:text-base text-gray-600"></p>
+      <button
+        id="submitCurhat"
+        class="mt-4 bg-violet-800 text-white py-2 mb-4 px-8 sm:px-10 py-3  sm:py-2.5 rounded-lg text-lg sm:text-xl hover:bg-gray-800 transition-colors"
+      >
+        Submit
+      </button>
+    </div>
+  </main>
+</div>
+
+<script>
+  function logout() {
+    sessionStorage.clear();
+    location.reload();
+  }
+</script>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 xl:py-24 max-w-4xl">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-violet-700 px-6 py-4">
+                <h1 class="text-xl font-bold text-white">Account Settings</h1>
+            </div>
+            
+            <div class="p-6">
+                <form id="settings-form" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                        <div class="col-span-1 flex flex-col items-center space-y-3">
+                            <div class="relative">
+                                <img id="profile-image-preview" src="" alt="Profile" 
+                                     class="w-32 h-32 rounded-full border-4 border-gray-200 object-cover">
+                                <label for="profile-image-input" 
+                                       class="absolute bottom-0 right-0 bg-violet-700 text-white rounded-full p-2 cursor-pointer hover:bg-violet-700 transition">
+                                    <i class="fas fa-camera text-sm"></i>
+                                </label>
+                                <input type="file" id="profile-image-input" accept="image/*" class="hidden" onchange="handleImageChange(event)">
+                            </div>
+                            
+                        </div>
+                        
+                        <div class="col-span-2 space-y-4">
+                            <div>
+                                <label for="username-field" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                <input type="text" id="username-field" name="username" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
+                                       placeholder="Enter your username">
+                                <p id="username-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                            </div>
+                            
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input type="email" id="email" name="email" disabled
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+                                       placeholder="Your email address">
+                                <p class="text-xs text-gray-500 mt-1">Email address cannot be changed</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-gray-200">
+                    
+                    <div>
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Change Password</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="current-password" class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                                <div class="relative">
+                                    <input type="password" id="current-password" name="current-password" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent pr-10"
+                                        placeholder="Enter current password">
+                                    <button type="button" data-toggle="current-password" 
+                                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <p id="current-password-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                            </div>
+
+                            <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="new-password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                    <div class="relative">
+                                        <input type="password" id="new-password" name="new-password" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent pr-10"
+                                            placeholder="Enter new password">
+                                        <button type="button" data-toggle="new-password" 
+                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <p id="new-password-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                                </div>
+                                
+                                <div>
+                                    <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                    <div class="relative">
+                                        <input type="password" id="confirm-password" name="confirm-password" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent pr-10"
+                                            placeholder="Confirm new password">
+                                        <button type="button" data-toggle="confirm-password" 
+                                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <p id="confirm-password-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mt-3">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Password must be at least 8 characters long and include a mix of letters, numbers, and symbols.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-medium text-gray-900 mb-4"></h2>
+                        <div class="bg-red-50 p-4 rounded-md">
+                            <p class="text-sm text-gray-700 mb-4">Deleting your account is permanent and cannot be undone. All your data will be removed.</p>
+                            <button type="button" id="delete-account-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                                Delete Account
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4 pt-4">
+                        <a href="javascript:history.back()" 
+                           class="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
+                            Cancel
+                        </a>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-violet-700 text-white rounded-md hover:bg-violet-700 transition">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
+            <div class="p-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirm Delete Account</h3>
+                    <p class="text-gray-600 mb-6">Are you sure you want to delete your account? This action cannot be undone, and all your data will be permanently removed.</p>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="closeDeleteModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                        <button id="confirm-delete-btn" 
+                                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="logout-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
+            <div class="p-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-sign-out-alt text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirm Logout</h3>
+                    <p class="text-gray-600 mb-6">Are you sure you want to log out? You'll need to sign in again to access your account.</p>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="closeLogoutModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                        <button onclick="handleLogout()" 
+                                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-spinner" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-violet-600"></div>
+            <span class="text-gray-700">Saving changes...</span>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="text-center">
+                <div id="alert-icon" class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"></div>
+                <h3 id="alert-title" class="text-lg font-semibold text-gray-900 mb-2"></h3>
+                <p id="alert-message" class="text-gray-600 mb-6"></p>
+                <button id="alert-close-btn" class="px-4 py-2 bg-violet-700 text-white rounded-md hover:bg-violet-700 transition w-full">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="success-alert" class="hidden fixed top-4 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md z-50 max-w-md">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-check-circle text-green-500 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <p class="font-medium">Success!</p>
+                <p class="text-sm">Your account settings have been updated successfully.</p>
+            </div>
+            <button onclick="document.getElementById('success-alert').classList.add('hidden')" class="ml-auto text-green-500 hover:text-green-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="error-alert" class="hidden fixed top-4 right-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md z-50 max-w-md">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <p class="font-medium">Error!</p>
+                <p id="error-message" class="text-sm">Something went wrong. Please try again.</p>
+            </div>
+            <button onclick="document.getElementById('error-alert').classList.add('hidden')" class="ml-auto text-red-500 hover:text-red-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

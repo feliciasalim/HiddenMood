@@ -1,0 +1,16 @@
+<div class="articles-section py-8 px-4 max-w-7xl mx-auto">
+  <div class="mb-8 xl:pt-14">
+    <h2 class="text-2xl sm:text-2xl font-bold mb-6 text-gray-600 text-center">Latest Articles</h2>
+  </div>
+
+  <div id="articles-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-start">
+    <div class="col-span-full flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-700"></div>
+      <span class="ml-2 text-gray-600">Loading articles...</span>
+    </div>
+  </div>
+
+  <div id="pagination" class="mt-8 pb-12"></div>
+</div>
+
+<script type="module" src="../presenters/articlesPresenter.js"></script>

@@ -1,0 +1,299 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hidden Mood</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/character.svg" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+        integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: 'Lato', sans-serif;
+      margin: 0;
+    }
+    .no-navbar .navbar {
+      display: none;
+    }
+    body.contact footer#contact {
+      display: none;
+    }
+    #app {
+      background-color: inherit;
+      min-height: calc(100vh - 64px);
+      margin-top: 0;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background-color: #f9fafb; /* bg-gray-50 */
+    }
+  </style>
+</head>
+
+<body class="bg-white text-gray-900">
+  <header id="navbar-container"></header>
+
+  <main id="app"></main>
+<footer class="contact border-t border-gray-200 text-gray-600 px-8 py-6 text-[20px]" id="contact">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-10 ml-6 md:ml-0 mr-6">
+      <div class="flex-shrink-0 mr-[9rem]">
+        <img src="assets/icon.svg" alt="HiMO Logo" class="h-12 lg:ml-6" />
+      </div>
+      <div class="flex flex-wrap gap-x-7 gap-y-6 flex-grow justify-between">
+        <div class="w-full sm:w-auto flex-0 min-w-[150px]">
+          <h3 class="text -xl font-semibold text-gray-800 mb-4">Notice</h3>
+          <div class="space-y-2 text-base">
+            <a href="/views/terms.html" target="_blank" rel="noopener noreferrer" class="block hover:text-violet-600">Terms of Service</a>
+            <a href="/views/privacy.html" target="_blank" rel="noopener noreferrer" class="block hover:text-violet-600">Privacy Policy</a>
+          </div>
+        </div>
+        <div class="w-full sm:w-auto flex-0 min-w-[150px]">
+          <h3 class="text-xl font-semibold text-gray-800 mb-4">Contact Us</h3>
+          <div class="space-y-2 text-base">
+            <p>Phone: +62 813-7519-xxxx</p>
+            <p>Email: hiddenmood.app@PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTIwIDhDMTYuNjg2MyA4IDEwIDExLjMxMzcgMTQgMTRWMTZDMTQgMTguMjA5MSAxNS43OTA5IDIwIDE4IDIwSDIyQzI0LjIwOTEgMjAgMjYgMTguMjA5MSAyNiAxNlYxNEMyNiAxMS4zMTM3IDIzLjMxMzcgOCAyMCA4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEwIDMyQzEwIDI2LjQ3NzIgMTQuNDc3MiAyMiAyMCAyMkMyNS41MjI4IDIyIDMwIDI2LjQ3NzIgMzAgMzJWMzRIMTBWMzJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4Kcom</p>
+          </div>
+        </div>
+        <div class="w-full sm:w-auto flex-0 min-w-[150px]">
+          <h3 class="text-xl font-semibold text-gray-800 mb-4">Follow Us</h3>
+          <div class="space-y-2 text-base">
+            <a href="#" class="block hover:text-violet-600">Instagram</a>
+            <a href="#" class="block hover:text-violet-600">TikTok</a>
+            <a href="#" class="block hover:text-violet-600">YouTube</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <footer class="copyright bg-violet-800 text-white text-center py-3 text-sm" id="copyright">
+    © 2025 CC25-CF050 | HiddenMood | All Rights Reserved 
+  </footer>
+
+  <script>
+    // Initialize isLoggedIn from sessionStorage to sync with app.js
+    let isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
+
+    // Function to attach navbar event listeners
+    function attachNavbarListeners() {
+      const menuToggle = document.getElementById('menu-toggle');
+      const navbarMenu = document.getElementById('navbar-menu');
+
+      if (menuToggle && navbarMenu) {
+        menuToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          navbarMenu.classList.toggle('hidden');
+        });
+
+        navbarMenu.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+
+        document.addEventListener('click', () => {
+          if (!navbarMenu.classList.contains('hidden')) {
+            navbarMenu.classList.add('hidden');
+          }
+        });
+      }
+
+      document.querySelectorAll('a[onclick*="loadView"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          const view = e.target.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+          console.log(`loadView called for view: ${view}`);
+        });
+      });
+    }
+
+    // Function to load navbar based on login state
+    async function updateNavbar() {
+      const navbarContainer = document.getElementById('navbar-container');
+      isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
+      const navbarFile = isLoggedIn ? 'views/navbarLogin.html' : 'views/navbarNotLogin.html';
+
+      try {
+        const response = await fetch(navbarFile);
+        if (!response.ok) throw new Error('Failed to load navbar');
+        const html = await response.text();
+        navbarContainer.innerHTML = html;
+        attachNavbarListeners();
+        
+        // Load user data for navbar if logged in
+        if (isLoggedIn) {
+          await loadUserDataForNavbar();
+        }
+      } catch (error) {
+        console.error('Error loading navbar:', error);
+        navbarContainer.innerHTML = '<p>Error loading navbar</p>';
+      }
+    }
+
+    // Function to load user data for navbar
+    async function loadUserDataForNavbar() {
+      const token = sessionStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/auth/profile/navbar', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          currentUser = result.user;
+          sessionStorage.setItem('user', JSON.stringify(currentUser));
+          updateProfileDisplay();
+        } else {
+          console.error('Failed to load user data for navbar');
+        }
+      } catch (error) {
+        console.error('Error loading user data for navbar:', error);
+      }
+    }
+
+    // Function to toggle login state for testing (replace with actual login system)
+    function toggleLoginState() {
+      isLoggedIn = !isLoggedIn;
+      sessionStorage.setItem("isLoggedIn", isLoggedIn.toString());
+      updateNavbar();
+    }
+
+    // Logout function
+    function logout() {
+      sessionStorage.removeItem("isLoggedIn");
+      sessionStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      isLoggedIn = false;
+      currentUser = null;
+      updateNavbar();
+      window.loadView('home');
+    }
+
+    // Initial navbar load
+    updateNavbar();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init({
+      duration: 800,
+      once: true,
+      offset: 500,
+      easing: 'ease-in-out',
+    });
+  </script>
+
+  <script type="module" src="app.js"></script>
+
+  <script>
+    const defaultUserIcon = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTIwIDhDMTYuNjg2MyA4IDEwIDExLjMxMzcgMTQgMTRWMTZDMTQgMTguMjA5MSAxNS43OTA5IDIwIDE4IDIwSDIyQzI0LjIwOTEgMjAgMjYgMTguMjA5MSAyNiAxNlYxNEMyNiAxMS4zMTM3IDIzLjMxMzcgOCAyMCA4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEwIDMyQzEwIDI2LjQ3NzIgMTQuNDc3MiAyMiAyMCAyMkMyNS41MjI4IDIyIDMwIDI2LjQ3NzIgMzAgMzJWMzRIMTBWMzJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K';
+    
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeNavbar();
+        setupEventListeners();
+    });
+
+    
+
+    function initializeNavbar() {
+        currentUser = getCurrentUser();
+        if (currentUser) {
+            updateProfileDisplay();
+        }
+    }
+
+    function setupEventListeners() {
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profile-dropdown');
+            const dropdownBtn = document.getElementById('profile-dropdown-btn');
+            
+            if (dropdown && !dropdown.contains(event.target) && !dropdownBtn.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        const menuToggle = document.getElementById('menu-toggle');
+        const navbarMenu = document.getElementById('navbar-menu');
+        
+        if (menuToggle && navbarMenu) {
+            menuToggle.addEventListener('click', function() {
+                navbarMenu.classList.toggle('hidden');
+            });
+        }
+    }
+
+    function updateProfileDisplay() {
+        if (!currentUser) return;
+
+        const profileImg = document.getElementById('profile-image');
+        const imageUrl = currentUser.profile_image || defaultUserIcon;
+        
+        if (profileImg) profileImg.src = imageUrl;
+
+        const dropdownUsername = document.getElementById('dropdown-username');
+        const dropdownEmail = document.getElementById('dropdown-email');
+        
+        if (dropdownUsername) dropdownUsername.textContent = currentUser.name || 'Unknown User';
+        if (dropdownEmail) dropdownEmail.textContent = currentUser.email || 'No email';
+    }
+
+    function toggleProfileDropdown() {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('hidden');
+        }
+    }
+
+    function confirmLogout() {
+        const modal = document.getElementById('logout-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            const navbarMenu = document.getElementById('navbar-menu');
+            if (navbarMenu) navbarMenu.classList.add('hidden');
+        }
+    }
+
+    function closeLogoutModal() {
+        const modal = document.getElementById('logout-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    function handleLogout() {
+        closeLogoutModal();
+        
+        if (typeof logout === 'function') {
+            logout();
+        } else {
+            sessionStorage.removeItem("isLoggedIn");
+            sessionStorage.removeItem("user");
+            sessionStorage.removeItem("token");
+            
+            if (typeof loadView === 'function') {
+                loadView('login');
+            } else {
+                window.location.href = '/login';
+            }
+        }
+    }
+
+    function getCurrentUser() {
+        const userStr = sessionStorage.getItem('user');
+        return userStr ? JSON.parse(userStr) : null;
+    }
+
+    // Remove duplicate loadView since it's handled in app.js
+</script>
+
+</body>
+</html>

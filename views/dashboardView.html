@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, transparent 37%, #f0f0f0 63%);
+            background-size: 400% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 100% 50%; }
+            100% { background-position: -100% 50%; }
+        }
+        
+        .card-hover {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        @media (max-width: 767px) {
+            .mobile-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .mobile-grid > * {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8  sm:py-8">
+        <div class="mb-6 sm:mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-700" id="username">Dashboard</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="refresh-dashboard" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <span class="material-icons text-sm mr-1">refresh</span>
+                        Refresh
+                    </button>
+                    <select class="block pl-3 pr-8 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-violet-500 focus:border-violet-500 rounded-md bg-white" id="time-filter">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Cards Row - Fixed Mobile Layout -->
+        <div class="mobile-grid lg:grid lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <!-- Overall Stress Level Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+                <div class="bg-violet-700 px-4 py-3">
+                    <div class="flex items-center">
+                        <span class=" text-white mr-2 text-lg"></span>
+                        <h2 class="text-base sm:text-lg font-semibold text-white">Overall Stress Level</h2>
+                    </div>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <div class="text-center">
+                        <div class="text-4xl sm:text-6xl font-bold mb-3 sm:mb-4" id="stress-percentage">
+                            <div class="loading-shimmer h-12 sm:h-16 w-20 sm:w-24 rounded mx-auto"></div>
+                        </div>
+                        <div class="bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 h-2 sm:h-3 rounded-full mb-3 sm:mb-4"></div>
+                        <div class="grid grid-cols-3 gap-1 sm:gap-2 text-xs">
+                            <div class="flex items-center justify-center">
+                                <div class="w-2 h-2 rounded-full bg-red-500 mr-1"></div>
+                                <span class="text-xs">High</span>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></div>
+                                <span class="text-xs">Medium</span>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div class="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
+                                <span class="text-xs">Low</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Latest Emotion Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+                <div class="bg-violet-700 px-4 py-3">
+                    <div class="flex items-center">
+                        <span class="text-white mr-2 text-lg"></span>
+                        <h2 class="text-base sm:text-lg font-semibold text-white">Latest Emotion</h2>
+                    </div>
+                </div>
+                <div class="p-4 sm:p-6 text-center">
+                    <div class="text-4xl sm:text-6xl mb-3 sm:mb-4" id="latest-emotion-emoji">
+                        <div class="loading-shimmer h-12 sm:h-16 w-12 sm:w-16 rounded-full mx-auto"></div>
+                    </div>
+                    <div class="text-lg sm:text-xl font-semibold text-gray-800" id="latest-emotion-text">
+                        <div class="loading-shimmer h-5 sm:h-6 w-16 sm:w-20 rounded mx-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+                <div class="bg-violet-700 px-4 py-3">
+                    <div class="flex items-center">
+                        <span class="text-white mr-2 text-lg"></span>
+                        <h2 class="text-base sm:text-lg font-semibold text-white">Your Stats</h2>
+                    </div>
+                </div>
+                <div class="p-4 sm:p-6">
+                    <div class="space-y-3 sm:space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-600">Total Predictions</span>
+                            <span class="text-md sm:text-lg font-bold text-gray-800" id="total-predictions">
+                                <div class="loading-shimmer h-5 w-8 rounded"></div>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-600">This Week</span>
+                            <span class="text-md sm:text-lg font-bold text-violet-600" id="week-predictions">
+                                <div class="loading-shimmer h-5 w-6 rounded"></div>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-600">Average Mood</span>
+                            <span class="text-md sm:text-lg font-bold text-gray-800" id="avg-mood">
+                                <div class="loading-shimmer h-5 w-12 rounded"></div>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+            <div class="xl:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+                <div class="bg-violet-700 px-4 py-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <span class="material-icons text-white mr-2">trending_up</span>
+                            <h2 class="text-lg font-semibold text-white">Stress Level Over Time</h2>
+                        </div>
+                        <select class="text-sm bg-white text-gray-700 rounded px-2 py-1" id="chart-filter">
+                            <option value="7">7 Days</option>
+                            <option value="30" selected>30 Days</option>
+                            <option value="90">90 Days</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="p-10 py-15">
+                    <div class="chart-container ">
+                        <canvas id="stress-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+                <div class="bg-violet-700 px-4 py-3">
+                    <div class="flex items-center">
+                        <span class="text-white mr-2"></span>
+                        <h2 class="text-lg font-semibold text-white">Emotion Distribution</h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="relative mb-10 mt-10" style="height: 150px;">
+                        <canvas id="emotion-chart"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-gray-800" id="emotion-chart-total">0</div>
+                                <div class="text-sm text-gray-500">predictions</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full" style="background-color: #5e4fa2"></div> <!-- Depressed -->
+                                <span>&nbsp;&nbsp;&nbsp;Depressed</span>
+                            </div>
+                            <span class="text-gray-500 font-medium" id="depressed-count">0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full" style="background-color: #9e7bb5"></div> <!-- Panicked -->
+                                <span>&nbsp;&nbsp;&nbsp;Panicked</span>
+                            </div>
+                            <span class="text-gray-500 font-medium" id="panicked-count">0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full" style="background-color: #d4a5e3"></div> <!-- Anxious -->
+                                <span>&nbsp;&nbsp;&nbsp;Anxious</span>
+                            </div>
+                            <span class="text-gray-500 font-medium" id="anxious-count">0</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full" style="background-color: #e0b0e4"></div> <!-- Overwhelmed -->
+                                <span>&nbsp;&nbsp;&nbsp;Overwhelmed</span>
+                            </div>
+                            <span class="text-gray-500 font-medium" id="overwhelmed-count">0</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-10">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full" style="background-color: #f1d4e0"></div> <!-- Lonely -->
+                                <span>&nbsp;&nbsp;&nbsp;Lonely</span>
+                            </div>
+                            <span class="text-gray-500 font-medium" id="lonely-count">0</span>
+                        </div>
+                 
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+                <div class="bg-violet-700 px-4 py-3">
+                    <div class="flex items-center">
+                        <span class="text-white mr-2"></span>
+                        <h2 class="text-lg font-semibold text-white">Recent Tips</h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="text-sm text-gray-600 mb-4 space-y-3"  id="stress-tips">
+                        Personalized suggestions based on your recent activity:
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+                <div class="bg-violet-700 px-4 py-3">
+                    <div class="flex items-center">
+                        <span class="text-white mr-2"></span>
+                        <h2 class="text-lg font-semibold text-white">Recent Activity</h2>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4" id="recent-activity">
+                        <div class="loading-shimmer h-16 w-full rounded"></div>
+                        <div class="loading-shimmer h-16 w-full rounded"></div>
+                        <div class="loading-shimmer h-16 w-full rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden card-hover">
+            <div class="bg-violet-700 px-4 py-3">
+                <div class="flex items-center">
+                    <span class=" text-white mr-2"></span>
+                    <h2 class="text-lg font-semibold text-white">Latest Predictions</h2>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emotion</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Text Preview</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stress</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="predictions-table">
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center">
+                                <div class="loading-shimmer h-4 w-40 rounded mx-auto mb-2"></div>
+                                <div class="loading-shimmer h-4 w-32 rounded mx-auto"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="loading-placeholder hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-violet-700"></div>
+            <span>Loading dashboard...</span>
+        </div>
+    </div>
+
+    <script type="module" src="../presenters/dashboardPresenter.js"></script>
+</body>
+</html>
+

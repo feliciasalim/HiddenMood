@@ -1,0 +1,221 @@
+<body class="bg-gray-50">
+    <!-- Navbar -->
+    <div class="navbar flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200 relative">
+        <a href="#" onclick="loadView('home')" class="ml-6">
+            <img src="assets/icon.svg" alt="HiMO Logo" class="h-10" />
+        </a>
+        
+        <button id="menu-toggle" class="lg:hidden text-gray-800 focus:outline-none mr-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+                 viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <nav id="navbar-menu"
+             class="hidden absolute top-full left-0 w-full bg-white shadow-md px-8 py-4 z-10 
+                    flex-col gap-4
+                    lg:flex lg:flex-row lg:items-center lg:gap-10 lg:shadow-none lg:bg-transparent lg:py-0 lg:px-0 lg:w-auto lg:relative lg:translate-x-0">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-10">
+                <a href="#" onclick="loadView('home')" class="text-gray-800 font-medium hover:text-violet-800 transition">Home</a>
+                <a href="#" onclick="loadView('curhat')" class="text-gray-800 font-medium hover:text-violet-800 transition">Mood Check</a>
+                <a href="#" onclick="loadView('dashboard')" class="text-gray-800 font-medium hover:text-violet-800 transition">Dashboard</a>
+                <a href="#" onclick="loadView('history')" class="text-gray-800 font-medium hover:text-violet-800 transition">History</a>
+                <a href="#" onclick="loadView('articles')" class="text-gray-800 font-medium hover:text-violet-800 transition">Articles</a>
+                <a href="#facilities" class="text-gray-800 font-medium hover:text-violet-800 transition">Health Facilities</a>
+            </div>
+            
+            <div class="flex flex-col gap-4 mt-4 lg:hidden">
+                <a href="#" onclick="loadView('account')"
+                   class="w-full text-center px-4 py-2 bg-violet-600 text-white font-medium rounded hover:bg-violet-700 transition">
+                    Settings
+                </a>
+                <button onclick="confirmLogout()" 
+                        class="w-full text-center px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition">
+                    Logout
+                </button>
+            </div>
+        </nav>
+        
+        <div class="hidden lg:flex gap-5 items-center mr-6 relative">
+            <div class="relative">
+                <button id="profile-dropdown-btn" onclick="toggleProfileDropdown()" 
+                        class="flex items-center space-x-2 focus:outline-none">
+                    <img id="profile-image" src="" alt="Profile" 
+                         class="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-violet-500 transition-colors object-cover">
+                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                
+                <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div class="py-2">
+                        <div class="px-4 py-2 border-b border-gray-100">
+                            <p class="text-sm font-medium text-gray-900" id="dropdown-username">Loading...</p>
+                            <p class="text-sm text-gray-500" id="dropdown-email">Loading...</p>
+                        </div>
+                        <a href="#" onclick="loadView('account')"
+                           class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                            <i class="fas fa-cog mr-3"></i>
+                            Settings
+                        </a>
+                        <button onclick="confirmLogout()" 
+                                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="logout-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
+            <div class="p-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-sign-out-alt text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirm Logout</h3>
+                    <p class="text-gray-600 mb-6">Are you sure you want to log out? You'll need to sign in again to access your account.</p>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="closeLogoutModal()" 
+                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                        <button onclick="handleLogout()" 
+                                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateNavbarProfileImage() {
+            const navbarProfileImg = document.getElementById('profile-image');
+            const dropdownUsername = document.getElementById('dropdown-username');
+            const dropdownEmail = document.getElementById('dropdown-email');
+            
+            if (!navbarProfileImg) return;
+            
+            const isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
+            if (!isLoggedIn) return;
+            
+            try {
+                const user = JSON.parse(sessionStorage.getItem("user") || "{}");
+                
+                if (dropdownUsername && user.name) {
+                    dropdownUsername.textContent = user.name;
+                }
+                if (dropdownEmail && user.email) {
+                    dropdownEmail.textContent = user.email;
+                }
+                
+                handleProfileImageDisplay(navbarProfileImg, user);
+                
+            } catch (error) {
+                console.error('Error updating navbar profile:', error);
+            }
+        }
+        
+        function handleProfileImageDisplay(imageElement, user) {
+            const defaultImage = 'https://via.placeholder.com/150x150/e2e8f0/64748b?text=User';
+            
+            try {
+                if (!user?.img) {
+                    imageElement.src = defaultImage;
+                    return;
+                }
+
+                if (typeof user.img === 'string') {
+                    if (user.img.startsWith('http') || user.img.startsWith('data:image/')) {
+                        imageElement.src = user.img;
+                        return;
+                    }
+                    
+                    if (user.img.startsWith('\\x')) {
+                        try {
+                            const hexString = user.img.substring(2);
+                            const url = hexString.match(/.{2}/g)?.map(hex => String.fromCharCode(parseInt(hex, 16))).join('') || '';
+                            if (url.startsWith('http')) {
+                                imageElement.src = url;
+                                return;
+                            }
+                        } catch (hexError) {
+                            console.error('Error decoding hex string:', hexError);
+                        }
+                    }
+                }
+
+                if (user.img && typeof user.img === 'object' && user.img.data) {
+                    const base64String = convertBinaryToBase64(user.img.data);
+                    if (base64String) {
+                        imageElement.src = base64String;
+                        return;
+                    }
+                }
+
+                imageElement.src = defaultImage;
+                
+                imageElement.onerror = () => {
+                    console.warn('Failed to load profile image, using default');
+                    imageElement.src = defaultImage;
+                    imageElement.onerror = null; 
+                };
+                
+            } catch (error) {
+                console.error('Error displaying profile image:', error);
+                imageElement.src = defaultImage;
+            }
+        }
+        
+        function convertBinaryToBase64(binaryData) {
+            try {
+                if (!binaryData) return null;
+
+                let binary = '';
+                let bytes;
+
+                if (binaryData instanceof ArrayBuffer) {
+                    bytes = new Uint8Array(binaryData);
+                } else if (binaryData instanceof Uint8Array) {
+                    bytes = binaryData;
+                } else if (Array.isArray(binaryData)) {
+                    bytes = new Uint8Array(binaryData);
+                } else {
+                    console.warn('Unknown binary data format:', typeof binaryData);
+                    return null;
+                }
+
+                const chunkSize = 8192; 
+                for (let i = 0; i < bytes.length; i += chunkSize) {
+                    const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+                    binary += String.fromCharCode.apply(null, chunk);
+                }
+
+                return 'data:image/jpeg;base64,' + btoa(binary);
+            } catch (error) {
+                console.error('Error converting binary to base64:', error);
+                return null;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateNavbarProfileImage();
+        });
+        
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'user') {
+                updateNavbarProfileImage();
+            }
+        });
+        
+        window.updateNavbarProfileImage = updateNavbarProfileImage;
+    </script>
+</body>

@@ -9,7 +9,6 @@ export function renderDashboard() {
     .then((html) => {
       document.getElementById("app").innerHTML = html;
 
-
       loadChartJS().then(() => {
         setupNavigation();
         initializeDashboard();
@@ -65,7 +64,8 @@ async function initializeDashboard() {
     
     await Promise.all([
       loadDashboardSummary(),
-      loadRecentHistory()
+      loadRecentHistory(),
+      loadStressHistory() // Separate call for stress history
     ]);
 
     await loadStressTips();
@@ -90,7 +90,6 @@ async function initializeDashboard() {
   }
 }
 
-
 async function loadDashboardSummary() {
   try {
     const days = getCurrentFilterDays();
@@ -98,7 +97,6 @@ async function loadDashboardSummary() {
     
     dashboardData.averageStress = data.averageStress || 0;
     dashboardData.emotionCounts = data.emotionCounts || {};
-    dashboardData.stressHistory = data.stressHistory || [];
     dashboardData.latestEmotion = data.latestEmotion || 'neutral';
     dashboardData.totalSessions = data.totalCount || 0;
     dashboardData.weeklyStressLevel = data.mostCommonStressLevel || 'Low';
@@ -136,6 +134,44 @@ async function loadRecentHistory(limit = 10) {
   }
 }
 
+// NEW: Separate function to load stress history with proper filtering
+async function loadStressHistory() {
+  try {
+    const days = getCurrentChartFilterDays();
+    const data = await authenticatedApiCall(`/api/dashboard/stress-history?days=${days}`, 'GET');
+    
+    // Process and sort the stress history data
+    dashboardData.stressHistory = (data || [])
+      .map(item => ({
+        date: new Date(item.created_at || item.date),
+        value: item.stress_percent || item.value || 0,
+        stress_level: item.stress_level
+      }))
+      .sort((a, b) => a.date - b.date); // Sort by date ascending
+    
+  } catch (error) {
+    console.error('Error loading stress history:', error);
+    // Fallback: generate mock data based on recent predictions if API fails
+    generateFallbackStressHistory();
+  }
+}
+
+// Fallback function to generate stress history from recent predictions
+function generateFallbackStressHistory() {
+  const days = getCurrentChartFilterDays();
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+  
+  dashboardData.stressHistory = dashboardData.recentPredictions
+    .filter(pred => new Date(pred.date) >= cutoffDate)
+    .map(pred => ({
+      date: new Date(pred.date),
+      value: pred.stress_percent || 0,
+      stress_level: pred.stress_level
+    }))
+    .sort((a, b) => a.date - b.date);
+}
+
 async function loadStressTips() {
   try {
     const tips = [];
@@ -151,7 +187,6 @@ async function loadStressTips() {
       
       if (whyIndex !== -1 && suggestionIndex !== -1) {
         explanation = feedback.substring(whyIndex + "Why you're getting this result:".length, suggestionIndex).trim();
-        
         suggestion = feedback.substring(suggestionIndex + "Suggestions:".length).trim();
         
         if (explanation) {
@@ -237,9 +272,7 @@ function updateEmotionTracker() {
   const chartContext = ctx.getContext('2d');
   
   const emotions = ['depressed', 'panicked', 'anxious', 'overwhelmed', 'lonely'];
-  
   const counts = emotions.map(emotion => dashboardData.emotionCounts[emotion.charAt(0).toUpperCase() + emotion.slice(1)] || 0);
-  
   const total = counts.reduce((sum, count) => sum + count, 0);
 
   const totalChartEl = document.getElementById('emotion-chart-total');
@@ -250,13 +283,7 @@ function updateEmotionTracker() {
     if (countEl) countEl.textContent = dashboardData.emotionCounts[emotion.charAt(0).toUpperCase() + emotion.slice(1)] || 0;
   });
 
-  const colorScale = [
-    '#5e4fa2', 
-    '#9e7bb5', 
-    '#d4a5e3', 
-    '#e0b0e4', 
-    '#f1d4e0' 
-  ];
+  const colorScale = ['#5e4fa2', '#9e7bb5', '#d4a5e3', '#e0b0e4', '#f1d4e0'];
 
   const emotionCountsWithNames = emotions.map((emotion, index) => ({
     name: emotion,
@@ -264,10 +291,7 @@ function updateEmotionTracker() {
   }));
 
   emotionCountsWithNames.sort((a, b) => b.count - a.count);
-
-  const assignedColors = emotionCountsWithNames.map((emotion, index) => {
-    return colorScale[index]; 
-  });
+  const assignedColors = emotionCountsWithNames.map((emotion, index) => colorScale[index]);
 
   if (total > 0) {
     chartInstances.emotionChart = new Chart(chartContext, {
@@ -300,7 +324,7 @@ function updateEmotionTracker() {
   }
 }
 
-
+// FIXED: Improved stress chart function
 function updateStressChart() {
   const ctx = document.getElementById('stress-chart');
   if (!ctx || !window.Chart) return;
@@ -320,20 +344,15 @@ function updateStressChart() {
     return;
   }
   
-  const labels = dashboardData.stressHistory.map(item => {
-    let date;
-    if (typeof item.date === 'string') {
-      date = new Date(item.date);
-    } else if (typeof item.date === 'number') {
-      date = new Date(item.date * 1000); 
-    } else {
-      date = item.date;
-    }
-    
+  // Process the data for the chart
+  const processedData = processStressHistoryForChart(dashboardData.stressHistory);
+  
+  const labels = processedData.map(item => {
+    const date = new Date(item.date);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
   
-  const data = dashboardData.stressHistory.map(item => item.value || item.stress_percent || 0);
+  const data = processedData.map(item => item.value);
 
   chartInstances.stressChart = new Chart(chartContext, {
     type: 'line',
@@ -353,15 +372,27 @@ function updateStressChart() {
         }),
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
-        pointRadius: 4
+        pointRadius: 4,
+        pointHoverRadius: 6
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
       plugins: {
         legend: {
           display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `Stress: ${context.parsed.y}%`;
+            }
+          }
         }
       },
       scales: {
@@ -372,6 +403,9 @@ function updateStressChart() {
             callback: function(value) {
               return value + '%';
             }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.1)'
           }
         },
         x: {
@@ -382,6 +416,51 @@ function updateStressChart() {
       }
     }
   });
+}
+
+// NEW: Function to process stress history data for chart display
+function processStressHistoryForChart(stressHistory) {
+  if (!stressHistory || stressHistory.length === 0) {
+    return [];
+  }
+
+  const days = getCurrentChartFilterDays();
+  
+  // Group data by day and calculate daily averages
+  const dailyData = new Map();
+  
+  stressHistory.forEach(item => {
+    const date = new Date(item.date);
+    const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    if (!dailyData.has(dateKey)) {
+      dailyData.set(dateKey, {
+        date: date,
+        values: [],
+        total: 0,
+        count: 0
+      });
+    }
+    
+    const dayData = dailyData.get(dateKey);
+    dayData.values.push(item.value);
+    dayData.total += item.value;
+    dayData.count += 1;
+  });
+  
+  // Convert to array and calculate averages
+  const processedData = Array.from(dailyData.values())
+    .map(dayData => ({
+      date: dayData.date,
+      value: Math.round(dayData.total / dayData.count)
+    }))
+    .sort((a, b) => a.date - b.date);
+  
+  // Limit to the selected number of days
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+  
+  return processedData.filter(item => item.date >= cutoffDate);
 }
 
 function updatePredictionsTable() {
@@ -524,10 +603,12 @@ function updateRecentActivity() {
   });
 }
 
+// FIXED: Improved event listener setup
 function setupEventListeners() {
   const timeFilter = document.getElementById('time-filter');
   if (timeFilter) {
     timeFilter.addEventListener('change', async function(e) {
+      console.log('Time filter changed to:', e.target.value);
       await refreshDashboardData();
     });
   }
@@ -535,7 +616,9 @@ function setupEventListeners() {
   const chartFilter = document.getElementById('chart-filter');
   if (chartFilter) {
     chartFilter.addEventListener('change', async function(e) {
-      await refreshDashboardData();
+      console.log('Chart filter changed to:', e.target.value);
+      // Only refresh stress chart data when chart filter changes
+      await refreshStressChart();
     });
   }
 
@@ -552,13 +635,36 @@ function getCurrentFilterDays() {
   return timeFilter ? parseInt(timeFilter.value) : 30;
 }
 
+// NEW: Separate function to get chart filter days
+function getCurrentChartFilterDays() {
+  const chartFilter = document.getElementById('chart-filter');
+  return chartFilter ? parseInt(chartFilter.value) : 30;
+}
+
+// NEW: Function to refresh only stress chart data
+async function refreshStressChart() {
+  try {
+    showLoadingState();
+    
+    await loadStressHistory();
+    updateStressChart();
+    
+    hideLoadingState();
+  } catch (error) {
+    console.error('Error refreshing stress chart:', error);
+    hideLoadingState();
+    showError('Failed to refresh chart data');
+  }
+}
+
 async function refreshDashboardData() {
   try {
     showLoadingState();
     
     await Promise.all([
       loadDashboardSummary(),
-      loadRecentHistory()
+      loadRecentHistory(),
+      loadStressHistory()
     ]);
     
     await loadStressTips();
@@ -577,7 +683,6 @@ async function refreshDashboardData() {
     showError('Failed to refresh dashboard data');
   }
 }
-
 
 function showLoadingState() {
   const loadingElements = document.querySelectorAll('.loading-placeholder');

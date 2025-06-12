@@ -20,7 +20,6 @@ export function renderDashboard() {
     });
 }
 
-// Load Chart.js dynamically
 function loadChartJS() {
   return new Promise((resolve, reject) => {
     if (window.Chart) {
@@ -36,7 +35,6 @@ function loadChartJS() {
   });
 }
 
-// Emotion emoji mapping
 const emotionEmojis = {
   'anxious': '😰',
   'depressed': '😔',
@@ -45,16 +43,15 @@ const emotionEmojis = {
   'lonely': '😐'
 };
 
-// Global dashboard data
 let dashboardData = {
   averageStress: 0,
   stressHistory: [],
   emotionCounts: {},
-  latestEmotion: 'neutral',
+  latestEmotion: '',
   recentPredictions: [],
   tips: [],
   totalSessions: 0,
-  weeklyStressLevel: 0, // Changed to store actual average stress for the week
+  weeklyStressLevel: 0, 
   avgMood: '',
   recentActivity: []
 };
@@ -100,13 +97,11 @@ async function loadDashboardSummary() {
     dashboardData.averageStress = data.averageStress || 0;
     dashboardData.emotionCounts = data.emotionCounts || {};
     dashboardData.stressHistory = data.stressHistory || [];
-    dashboardData.latestEmotion = data.latestEmotion || 'neutral';
+    dashboardData.latestEmotion = data.latestEmotion || 'No data available';
     dashboardData.totalSessions = data.totalCount || 0;
-    dashboardData.weeklyStressLevel = data.weeklyCount || 0; // This will be recalculated
-    dashboardData.avgMood = data.mostCommonEmotion || 'neutral';
+    dashboardData.weeklyStressLevel = data.weeklyAverageStress || 0; 
+    dashboardData.avgMood = data.mostCommonEmotion || '-';
     
-    // Calculate weekly average stress separately
-    await calculateWeeklyStats();
     
   } catch (error) {
     console.error('Error loading dashboard summary:', error);
@@ -116,7 +111,6 @@ async function loadDashboardSummary() {
 
 async function calculateWeeklyStats() {
   try {
-    // Get data for the last 7 days specifically for weekly stats
     const weeklyData = await authenticatedApiCall('/api/dashboard/summary?days=7', 'GET');
     dashboardData.weeklyStressLevel = weeklyData.averageStress || 0;
   } catch (error) {
@@ -139,7 +133,6 @@ async function loadRecentHistory(limit = 10) {
       history_id: item.history_id
     }));
 
-    // Extract recent activity (just text)
     dashboardData.recentActivity = data.slice(0, 5).map(item => ({
       date: item.created_at,
       text: item.text,
@@ -156,11 +149,9 @@ async function loadStressTips() {
   try {
     const tips = [];
 
-    // Get only the most recent feedback (first item since it's already sorted by most recent)
     if (dashboardData.recentPredictions.length > 0 && dashboardData.recentPredictions[0].feedback) {
       const feedback = dashboardData.recentPredictions[0].feedback;
       
-      // Extract the explanation part (after "Why you're getting this result:")
       const whyIndex = feedback.indexOf("Why you're getting this result:");
       const suggestionIndex = feedback.indexOf("Suggestions:");
       
@@ -168,13 +159,10 @@ async function loadStressTips() {
       let suggestion = "";
       
       if (whyIndex !== -1 && suggestionIndex !== -1) {
-        // Extract explanation (skip "Why you're getting this result:" text)
         explanation = feedback.substring(whyIndex + "Why you're getting this result:".length, suggestionIndex).trim();
         
-        // Extract suggestion (skip "Suggestions:" text)
         suggestion = feedback.substring(suggestionIndex + "Suggestions:".length).trim();
         
-        // Format as bullet points
         if (explanation) {
           tips.push(`${explanation}`);
         }
@@ -183,11 +171,8 @@ async function loadStressTips() {
         }
       }
     }
-
-    // Set the formatted tips
     dashboardData.tips = tips;
     
-    // Fallback to default tips if none found
     if (dashboardData.tips.length === 0) {
       dashboardData.tips = [
         '• Take regular breaks throughout the day',
@@ -200,7 +185,6 @@ async function loadStressTips() {
     
   } catch (error) {
     console.error('Error loading stress tips:', error);
-    // Use fallback tips
     dashboardData.tips = [
       'No tips shown.'
     ];
@@ -478,13 +462,11 @@ function updatePredictionsTable() {
     const stressColor = prediction.stress_percent >= 70 ? 'text-red-600' : 
                        prediction.stress_percent >= 40 ? 'text-yellow-600' : 'text-green-600';
 
-    // Truncate text preview
     let textPreview = prediction.text || 'No text available';
     if (textPreview.length > 60) {
       textPreview = textPreview.substring(0, 60) + '...';
     }
 
-    // Format date properly
     let formattedDate;
     try {
       const date = new Date(prediction.date);
@@ -554,7 +536,6 @@ function updateRecentActivity() {
       textPreview = textPreview.substring(0, 80) + '...';
     }
     
-    // Format date properly
     let formattedDate;
     try {
       const date = new Date(activity.date);
@@ -579,9 +560,7 @@ function updateRecentActivity() {
   });
 }
 
-// Event Handlers
 function setupEventListeners() {
-  // Time filter change handler
   const timeFilter = document.getElementById('time-filter');
   if (timeFilter) {
     timeFilter.addEventListener('change', async function(e) {
@@ -589,7 +568,6 @@ function setupEventListeners() {
     });
   }
 
-  // Chart filter change handler (if exists)
   const chartFilter = document.getElementById('chart-filter');
   if (chartFilter) {
     chartFilter.addEventListener('change', async function(e) {
@@ -597,7 +575,6 @@ function setupEventListeners() {
     });
   }
 
-  // Refresh button
   const refreshBtn = document.getElementById('refresh-dashboard');
   if (refreshBtn) {
     refreshBtn.addEventListener('click', async () => {
@@ -615,13 +592,11 @@ async function refreshDashboardData() {
   try {
     showLoadingState();
     
-    // Load dashboard summary and recent history first
     await Promise.all([
       loadDashboardSummary(),
       loadRecentHistory()
     ]);
     
-    // Then load stress tips
     await loadStressTips();
     
     updateStressLevel();

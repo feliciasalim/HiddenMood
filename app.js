@@ -9,137 +9,6 @@ import { renderArticles } from './presenters/articlesPresenter.js';
 import { renderHistory } from './presenters/historyPresenter.js';
 import { renderAccount } from './presenters/accountPresenter.js';
 
-let isInitialLoad = true;
-
-window.loadView = async function (view) {
-    if (!view) {
-        const hash = window.location.hash.substring(1);
-        view = hash || (sessionStorage.getItem('isLoggedIn') === 'true' ? 'curhat' : 'home');
-    }
-    
-    if (view !== 'home') {
-        window.location.hash = view;
-    } else {
-        window.location.hash = '';
-    }
-
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-    console.log(`Attempting to load view: ${view}`);
-    console.log(`isLoggedIn: ${isLoggedIn}`);
-    
-    await window.updateNavbar();
-    
-    if (view === 'signup' || view === 'login' || view === 'forgetpassword' || view === 'terms' || view === 'privacy') {
-        document.body.classList.add('no-navbar');
-    } else {
-        document.body.classList.remove('no-navbar');
-    }
-    
-    if (view === 'signup' || view === 'login' || view === 'dashboard' || view === 'account' || view === 'history' || view === 'curhat' || view === 'feedback' || view === 'articles' || view === 'forgetpassword' || view === 'terms' || view === 'privacy') {
-        document.body.classList.add('contact');
-    } else {
-        document.body.classList.remove('contact');
-    }
-    
-    let renderFunction;
-    switch (view) {
-        case 'home':
-            renderFunction = renderHome;
-            break;
-        case 'login':
-            renderFunction = renderLogin;
-            break;
-        case 'signup':
-            renderFunction = renderSignup;
-            break;
-        case 'articles':
-            renderFunction = renderArticles;
-            break;
-        case 'curhat':
-            renderFunction = isLoggedIn ? renderCurhat : renderLogin;
-            break;
-        case 'feedback':
-            renderFunction = isLoggedIn ? renderFeedback : renderLogin;
-            break;
-        case 'dashboard':
-            renderFunction = isLoggedIn ? renderDashboard : renderLogin;
-            break;
-        case 'history':
-            renderFunction = isLoggedIn ? renderHistory : renderLogin;
-            break;
-        case 'account':
-            renderFunction = renderAccount;
-            break;
-        case 'forgetpassword':
-            renderFunction = renderForgetPass;
-            break;
-        case 'terms':
-            renderFunction = renderTerms;
-            break;
-        case 'privacy':
-            renderFunction = renderPrivacy;
-            break;
-        default:
-            renderFunction = renderHome;
-    }
-    
-    if (renderFunction) {
-        try {
-            await renderFunction(); 
-        } catch (error) {
-            console.error(`Error rendering view ${view}:`, error);
-            renderLogin();
-        }
-    } else {
-        console.error(`No render function found for view ${view}`);
-        renderHome();
-    }
-    
-    if (isLoggedIn) {
-        const cachedUser = window.getCurrentUser();
-        if (cachedUser) {
-            updateNavbarUI(cachedUser);
-        }
-    }
-};
-
-window.login = async function (userData, token) {
-    sessionStorage.setItem('isLoggedIn', 'true');
-    if (userData) {
-        sessionStorage.setItem('user', JSON.stringify(userData));
-    }
-    if (token) {
-        sessionStorage.setItem('token', token);
-    }
-    console.log('User logged in, isLoggedIn set to true');
-    console.log('User data:', userData);
-    
-    await loadView('curhat');
-};
-
-window.addEventListener('hashchange', () => {
-    if (!isInitialLoad) {
-        const hash = window.location.hash.substring(1);
-        loadView(hash);
-    }
-});
-
-window.addEventListener('DOMContentLoaded', async () => {
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-    console.log(`DOMContentLoaded: isLoggedIn = ${isLoggedIn}`);
-    
-    const hash = window.location.hash.substring(1);
-    let initialView;
-    
-    if (hash) {
-        initialView = hash;
-    } else {
-        initialView = isLoggedIn ? 'curhat' : 'home';
-    }
-    
-    await loadView(initialView);
-    isInitialLoad = false;
-});
 
 window.openInNewTab = function(view) {
     const newTab = window.open(window.location.origin + window.location.pathname + '#' + view, '_blank');
@@ -288,7 +157,115 @@ async function fetchUserProfile() {
     }
 }
 
+window.loadView = function (view) {
+    if (!view) {
+        const hash = window.location.hash.substring(1);
+        view = hash || (sessionStorage.getItem('isLoggedIn') === 'true' ? 'curhat' : 'home');
+    }
+    
+    if (view !== 'home') {
+        window.location.hash = view;
+    } else {
+        window.location.hash = '';
+    }
 
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    console.log(`Attempting to load view: ${view}`);
+    console.log(`isLoggedIn: ${isLoggedIn}`);
+    
+    if (view === 'signup' || view === 'login' || view === 'forgetpassword' || view === 'terms' || view === 'privacy') {
+        document.body.classList.add('no-navbar');
+    } else {
+        document.body.classList.remove('no-navbar');
+    }
+    
+    if (view === 'signup' || view === 'login' || view === 'dashboard' || view === 'account' || view === 'history' || view === 'curhat' || view === 'feedback' || view === 'articles' || view === 'forgetpassword' || view === 'terms' || view === 'privacy') {
+        document.body.classList.add('contact');
+    } else {
+        document.body.classList.remove('contact');
+    }
+    
+    let renderFunction;
+    switch (view) {
+        case 'home':
+            renderFunction = renderHome;
+            break;
+        case 'login':
+            renderFunction = renderLogin;
+            break;
+        case 'signup':
+            renderFunction = renderSignup;
+            break;
+        case 'articles':
+            renderFunction = renderArticles;
+            break;
+        case 'curhat':
+            renderFunction = isLoggedIn ? renderCurhat : renderLogin;
+            break;
+        case 'feedback':
+            renderFunction = isLoggedIn ? renderFeedback : renderLogin;
+            break;
+        case 'dashboard':
+            renderFunction = isLoggedIn ? renderDashboard : renderLogin;
+            break;
+        case 'history':
+            renderFunction = isLoggedIn ? renderHistory : renderLogin;
+            break;
+        case 'account':
+            renderFunction = renderAccount;
+            break;
+        case 'forgetpassword':
+            renderFunction = renderForgetPass;
+            break;
+        case 'terms':
+            renderFunction = renderTerms;
+            break;
+        case 'privacy':
+            renderFunction = renderPrivacy;
+            break;
+        default:
+            renderFunction = renderHome;
+    }
+    
+    if (renderFunction) {
+        try {
+            renderFunction();
+        } catch (error) {
+            console.error(`Error rendering view ${view}:`, error);
+            renderLogin();
+        }
+    } else {
+        console.error(`No render function found for view ${view}`);
+        renderHome();
+    }
+    
+    window.updateNavbar().then(() => {
+        if (isLoggedIn) {
+            const cachedUser = window.getCurrentUser();
+            if (cachedUser) {
+                updateNavbarUI(cachedUser);
+            }
+        }
+    }).catch(error => {
+        console.error('Error updating navbar:', error);
+    });
+};
+
+
+window.login = async function (userData, token) {
+    sessionStorage.setItem('isLoggedIn', 'true');
+    if (userData) {
+        sessionStorage.setItem('user', JSON.stringify(userData));
+    }
+    if (token) {
+        sessionStorage.setItem('token', token);
+    }
+    console.log('User logged in, isLoggedIn set to true');
+    console.log('User data:', userData);
+    updateNavbarUI(userData);
+    await window.updateNavbar();
+    loadView('curhat');
+};
 
 window.logout = function () {
     sessionStorage.removeItem('isLoggedIn');
@@ -312,3 +289,8 @@ window.isUserLoggedIn = function () {
     return sessionStorage.getItem('isLoggedIn') === 'true';
 };
 
+window.addEventListener('DOMContentLoaded', () => {
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    console.log(`DOMContentLoaded: isLoggedIn = ${isLoggedIn}`);
+    loadView(isLoggedIn ? 'curhat' : 'home');
+});

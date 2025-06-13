@@ -11,7 +11,7 @@ import { renderAccount } from './presenters/accountPresenter.js';
 
 let isInitialLoad = true;
 
-window.loadView = async function (view) {
+window.loadView = async function (view, section) {
     if (!view) {
         const hash = window.location.hash.substring(1);
         view = hash || (sessionStorage.getItem('isLoggedIn') === 'true' ? 'curhat' : 'home');
@@ -86,6 +86,20 @@ window.loadView = async function (view) {
     if (renderFunction) {
         try {
             await renderFunction(); 
+            
+            if (section) {
+                setTimeout(() => {
+                    const targetElement = document.getElementById(section);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    } else {
+                        console.warn(`Section with id '${section}' not found`);
+                    }
+                }, 100);
+            }
         } catch (error) {
             console.error(`Error rendering view ${view}:`, error);
             renderLogin();

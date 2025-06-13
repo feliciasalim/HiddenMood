@@ -1,8 +1,10 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import express from 'express';
 
 dotenv.config();
 
+const router = express.Router();
 
 export const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -24,4 +26,13 @@ export const authenticateToken = (req, res, next) => {
         next();
     });
 };
-    
+
+router.post("/register", (req, res) => {
+  res.json({ message: "Register endpoint works!" });
+});
+
+router.post("/login", (req, res) => {
+  res.json({ message: "Login endpoint works!" });
+});
+
+export default router;

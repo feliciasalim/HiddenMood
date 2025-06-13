@@ -60,18 +60,20 @@ let chartInstances = {};
 
 async function initializeDashboard() {
   try {
+    console.log('Initializing dashboard...');
     showLoadingState();
     
     await Promise.all([
-      loadDashboardSummary(),
+      loadDashboardSummary(), 
       loadRecentHistory()
     ]);
 
     await loadStressTips();
 
+    console.log('Updating UI components...');
     updateStressLevel();
-    updateLatestEmotion();
-    updateQuickStats();
+    updateLatestEmotion(); // This should now work correctly
+    updateQuickStats(); // This should now show weekly stress level
     updateEmotionTracker();
     updateStressChart();
     updatePredictionsTable();
@@ -81,6 +83,8 @@ async function initializeDashboard() {
     setupEventListeners();
     
     hideLoadingState();
+    
+    console.log('Dashboard initialization complete');
     
   } catch (error) {
     console.error('Error initializing dashboard:', error);
@@ -92,16 +96,28 @@ async function initializeDashboard() {
 async function loadDashboardSummary() {
   try {
     const days = getCurrentFilterDays();
+    console.log('Loading dashboard summary for days:', days);
+    
     const data = await authenticatedApiCall(`/api/dashboard/summary?days=${days}`, 'GET');
+    
+    console.log('Dashboard summary data received:', data);
     
     dashboardData.averageStress = data.averageStress || 0;
     dashboardData.emotionCounts = data.emotionCounts || {};
     dashboardData.stressHistory = data.stressHistory || [];
-    dashboardData.latestEmotion = data.latestEmotion || '';
+    dashboardData.latestEmotion = data.latestEmotion || 'neutral';
     dashboardData.totalSessions = data.totalCount || 0;
-    dashboardData.weeklyStressLevel = data.weeklyAverageStress || 0; 
-    dashboardData.avgMood = data.mostCommonEmotion || '';
+    dashboardData.avgMood = data.mostCommonEmotion || 'neutral';
     
+    // Load weekly stats separately
+    await loadWeeklyStats();
+    
+    console.log('Dashboard data updated:', {
+      latestEmotion: dashboardData.latestEmotion,
+      emotionCounts: dashboardData.emotionCounts,
+      totalSessions: dashboardData.totalSessions,
+      weeklyStressLevel: dashboardData.weeklyStressLevel
+    });
     
   } catch (error) {
     console.error('Error loading dashboard summary:', error);
@@ -109,13 +125,17 @@ async function loadDashboardSummary() {
   }
 }
 
-async function calculateWeeklyStats() {
+async function loadWeeklyStats() {
   try {
-    const weeklyData = await authenticatedApiCall('/api/dashboard/summary?days=7', 'GET');
-    dashboardData.weeklyStressLevel = weeklyData.averageStress || 0;
+    const weeklyData = await authenticatedApiCall('/api/dashboard/weekly-stats', 'GET');
+    dashboardData.weeklyStressLevel = weeklyData.weeklyStressLevel || 'Low';
+    dashboardData.weeklyAverageStress = weeklyData.weeklyAverageStress || 0;
+    dashboardData.weeklyCount = weeklyData.weeklyCount || 0;
   } catch (error) {
-    console.error('Error calculating weekly stats:', error);
-    dashboardData.weeklyStressLevel = 0;
+    console.error('Error loading weekly stats:', error);
+    dashboardData.weeklyStressLevel = 'Low';
+    dashboardData.weeklyAverageStress = 0;
+    dashboardData.weeklyCount = 0;
   }
 }
 
@@ -160,55 +180,73 @@ function updateStressLevel() {
   }
 }
 
-// Update the updateLatestEmotion function
 function updateLatestEmotion() {
-  const latestEmotionCard = document.querySelector('[data-card="latest-emotion"]');
-  if (!latestEmotionCard) return;
-  
-  // Hide the entire latest emotion card if there's no data
-  if (!dashboardData.latestEmotion || dashboardData.totalSessions === 0) {
-    latestEmotionCard.style.display = 'none';
-    return;
-  }
-  
-  latestEmotionCard.style.display = 'block';
-  
   const emojiEl = document.getElementById('latest-emotion-emoji');
   const textEl = document.getElementById('latest-emotion-text');
   
-  if (!emojiEl || !textEl) return;
+  console.log('Updating latest emotion:', {
+    emojiEl: !!emojiEl,
+    textEl: !!textEl,
+    latestEmotion: dashboardData.latestEmotion,
+    totalSessions: dashboardData.totalSessions
+  });
   
-  const emotion = dashboardData.latestEmotion.toLowerCase();
-  emojiEl.textContent = emotionEmojis[emotion] || '-';
-  textEl.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+  if (!emojiEl || !textEl) {
+    console.error('Latest emotion elements not found in DOM');
+    return;
+  }
+  
+  // Show default values if no sessions or no emotion
+  if (dashboardData.totalSessions === 0 || !dashboardData.latestEmotion || dashboardData.latestEmotion.trim() === '') {
+    emojiEl.textContent = '😐';
+    textEl.textContent = 'No recent emotion';
+    return;
+  }
+  
+  const normalizedEmotion = dashboardData.latestEmotion.toLowerCase().trim();
+  
+  // Update emoji
+  const emoji = emotionEmojis[normalizedEmotion] || emotionEmojis['neutral'] || '😐';
+  emojiEl.textContent = emoji;
+  
+  // Update text with proper capitalization
+  const displayText = normalizedEmotion.charAt(0).toUpperCase() + normalizedEmotion.slice(1);
+  textEl.textContent = displayText;
+  
+  console.log('Latest emotion updated:', {
+    originalEmotion: dashboardData.latestEmotion,
+    normalizedEmotion,
+    emoji,
+    displayText
+  });
 }
 
-// Update the updateQuickStats function
 function updateQuickStats() {
   const totalEl = document.getElementById('total-predictions');
   if (totalEl) totalEl.textContent = dashboardData.totalSessions;
 
   const weekEl = document.getElementById('week-predictions');
   if (weekEl) {
-    if (dashboardData.weeklyStressLevel && dashboardData.weeklyStressLevel !== 'None') {
+    // Show weekly stress level instead of count
+    if (dashboardData.weeklyStressLevel && dashboardData.weeklyCount > 0) {
       weekEl.textContent = dashboardData.weeklyStressLevel;
     } else {
-      weekEl.textContent = '-';
+      weekEl.textContent = 'No data';
     }
   }
 
   const avgMoodEl = document.getElementById('avg-mood');
   if (avgMoodEl) {
-    if (dashboardData.avgMood && dashboardData.avgMood !== 'No emotion entry') {
+    if (dashboardData.avgMood && dashboardData.avgMood !== 'neutral' && dashboardData.totalSessions > 0) {
       const mood = dashboardData.avgMood.charAt(0).toUpperCase() + dashboardData.avgMood.slice(1);
       avgMoodEl.textContent = mood;
     } else {
-      avgMoodEl.textContent = '-';
+      avgMoodEl.textContent = 'No data';
     }
   }
 }
 
-// Update the updateTips function
+
 function updateTips() {
   const tipsEl = document.getElementById('stress-tips');
   if (!tipsEl) return;
@@ -641,15 +679,15 @@ async function refreshDashboardData() {
     showLoadingState();
     
     await Promise.all([
-      loadDashboardSummary(),
+      loadDashboardSummary(), 
       loadRecentHistory()
     ]);
     
     await loadStressTips();
     
     updateStressLevel();
-    updateLatestEmotion();
-    updateQuickStats();
+    updateLatestEmotion(); // Fixed function
+    updateQuickStats(); // Fixed function
     updateStressChart();
     updateEmotionTracker();
     updatePredictionsTable();

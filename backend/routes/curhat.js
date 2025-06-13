@@ -29,6 +29,7 @@ router.post("/curhat", async (req, res) => {
     console.log("Calling ML API...");
     console.log("ML API URL:", "https://ml-api-295116710961.asia-southeast1.run.app/predict/analyze");
     
+    // Call ML API with enhanced error handling
     const mlResponse = await axios.post(
       "https://ml-api-295116710961.asia-southeast1.run.app/predict/analyze",
       { text: text.trim() },
@@ -37,9 +38,9 @@ router.post("/curhat", async (req, res) => {
           "Content-Type": "application/json",
           "User-Agent": "HiddenMood-Backend/1.0"
         },
-        timeout: 120000, 
+        timeout: 120000, // Increased to 120 seconds
         validateStatus: function (status) {
-          return status < 500;
+          return status < 500; // Resolve only if the status code is less than 500
         }
       }
     );
@@ -60,6 +61,7 @@ router.post("/curhat", async (req, res) => {
     const mlResult = mlResponse.data;
     console.log("ML API Success! Response:", JSON.stringify(mlResult, null, 2));
 
+    // Validate ML response structure
     if (!mlResult || typeof mlResult !== 'object') {
       console.error("Invalid ML response format:", typeof mlResult);
       return res.status(500).json({ 
@@ -68,6 +70,7 @@ router.post("/curhat", async (req, res) => {
       });
     }
 
+    // Extract and validate data with more robust fallbacks
     const responseData = {
       predicted_stress: mlResult.predicted_stress || { 
         label: 'medium', 
@@ -93,6 +96,7 @@ router.post("/curhat", async (req, res) => {
       videos_count: responseData.recommended_videos.recommendations?.length || 0
     });
 
+    // Save to history if user_id is provided
     if (user_id) {
       try {
         console.log("Saving to history for user:", user_id);
@@ -102,11 +106,11 @@ router.post("/curhat", async (req, res) => {
           history_id,
           user_id,
           stress_level: responseData.predicted_stress.label,
-          stress_percent: responseData.stress_level.stress_level, 
+          stress_percent: responseData.stress_level.stress_level, // Now accepts float due to schema change
           emotion: responseData.predicted_emotion.label,
           text: text.trim(),
           feedback: responseData.analysis,
-          video_link: responseData.recommended_videos.recommendations,
+          video_link: responseData.recommended_videos.recommendations, // Store full array
           created_at: DateTime.now().setZone("Asia/Jakarta").toISO()
         };
 

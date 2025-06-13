@@ -86,19 +86,6 @@ window.loadView = async function (view) {
     if (renderFunction) {
         try {
             await renderFunction(); 
-            if (section) {
-                setTimeout(() => {
-                    const targetElement = document.getElementById(section);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    } else {
-                        console.warn(`Section with id '${section}' not found`);
-                    }
-                }, 100);
-            }
         } catch (error) {
             console.error(`Error rendering view ${view}:`, error);
             renderLogin();

@@ -22,37 +22,7 @@ const upload = multer({
   },
 });
 
-router.get("/", authenticateToken, async (req, res) => {
-  console.log("GET /api/profile called with user:", req.user.user_id);
-  try {
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("user_id, name, email, img")
-      .eq("user_id", req.user.user_id)
-      .single();
-
-    if (error || !user) {
-      console.error("User fetch error:", error?.message || "No user found");
-      return res.send("User not found");
-    }
-
-    res.json({
-      user: {
-        user_id: user.user_id,
-        name: user.name,
-        email: user.email,
-        img: user.img || null,
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching profile:", {
-      message: error.message,
-      stack: error.stack
-    });
-    res.send("Failed to fetch profile");
-  }
-});
-
+// Replace your existing PUT route with this fixed version
 router.put("/", authenticateToken, upload.single("profileImage"), async (req, res) => {
   console.log("PUT /api/profile called for user:", req.user.user_id);
   try {
@@ -64,7 +34,7 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
 
     if (userError || !user) {
       console.error("User fetch error:", userError?.message || "No user found");
-      return res.send("User not found");
+      return res.status(404).json({ error: "User not found" });
     }
 
     const updates = {};
@@ -76,17 +46,17 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
     if (req.body.newPassword && req.body.currentPassword) {
       const isValidPassword = await bcrypt.compare(req.body.currentPassword, user.password);
       if (!isValidPassword) {
-        return res.send("Invalid current password");
+        return res.status(400).json({ error: "Invalid current password" });
       }
 
       const passwordValidation = validatePassword(req.body.newPassword);
       if (!passwordValidation.isValid) {
-        return res.send(passwordValidation.message);
+        return res.status(400).json({ error: passwordValidation.message });
       }
 
       const isSamePassword = await bcrypt.compare(req.body.newPassword, user.password);
       if (isSamePassword) {
-        return res.send("New password cannot be the same as the current password");
+        return res.status(400).json({ error: "New password cannot be the same as the current password" });
       }
 
       const passwordHash = await bcrypt.hash(req.body.newPassword, 12);
@@ -96,7 +66,7 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
     if (req.file) {
       try {
         if (req.file.size > 5 * 1024 * 1024) {
-          return res.send("Image size too large (max 5MB)");
+          return res.status(400).json({ error: "Image size too large (max 5MB)" });
         }
 
         const fileName = `profile-${req.user.user_id}-${Date.now()}.${req.file.mimetype.split("/")[1]}`;
@@ -110,7 +80,7 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
 
         if (uploadError) {
           console.error("Image upload error:", uploadError.message);
-          return res.send("Failed to upload image");
+          return res.status(500).json({ error: "Failed to upload image", details: uploadError.message });
         }
 
         const { data: urlData } = supabase.storage
@@ -119,6 +89,7 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
 
         updates.img = urlData.publicUrl;
 
+        // Clean up old image
         if (user.img && user.img.includes('profile-img/')) {
           try {
             const oldFileName = user.img.split('/').pop();
@@ -133,7 +104,7 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
         console.log(`Image uploaded: ${req.file.mimetype}, size: ${req.file.size} bytes, URL: ${updates.img}`);
       } catch (error) {
         console.error("Image processing error:", error.message);
-        return res.send("Failed to process image");
+        return res.status(500).json({ error: "Failed to process image", details: error.message });
       }
     }
 
@@ -146,7 +117,7 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
 
     if (updateError) {
       console.error("Update error:", updateError.message);
-      return res.send("Failed to update profile");
+      return res.status(500).json({ error: "Failed to update profile", details: updateError.message });
     }
 
     res.json({
@@ -163,7 +134,39 @@ router.put("/", authenticateToken, upload.single("profileImage"), async (req, re
       message: err.message,
       stack: err.stack
     });
-    res.send("Failed to update profile");
+    res.status(500).json({ error: "Failed to update profile", details: err.message });
+  }
+});
+
+// Also fix the GET and DELETE routes
+router.get("/", authenticateToken, async (req, res) => {
+  console.log("GET /api/profile called with user:", req.user.user_id);
+  try {
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("user_id, name, email, img")
+      .eq("user_id", req.user.user_id)
+      .single();
+
+    if (error || !user) {
+      console.error("User fetch error:", error?.message || "No user found");
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      user: {
+        user_id: user.user_id,
+        name: user.name,
+        email: user.email,
+        img: user.img || null,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 });
 
@@ -177,96 +180,52 @@ router.delete("/", authenticateToken, async (req, res) => {
       .single();
 
     if (userError || !user) {
-      console.error("User fetch error:", {
-        message: userError?.message || "No user found",
-        details: userError?.details,
-        code: userError?.code,
-        hint: userError?.hint
-      });
-      return res.send("User not found");
+      console.error("User fetch error:", userError?.message || "No user found");
+      return res.status(404).json({ error: "User not found" });
     }
 
-    console.log("User found:", user.user_id);
-
-    const { data: historyData, error: historyError } = await supabase
+    // Delete history records
+    const { error: historyError } = await supabase
       .from("history")
       .delete()
-      .eq("user_id", req.user.user_id)
-      .select("history_id");
+      .eq("user_id", req.user.user_id);
 
     if (historyError) {
-      console.error("History delete error:", {
-        message: historyError.message,
-        details: historyError.details,
-        code: historyError.code,
-        hint: historyError.hint
-      });
-      return res.send("Failed to delete history data");
+      console.error("History delete error:", historyError);
+      return res.status(500).json({ error: "Failed to delete history data" });
     }
 
-    console.log("History records deleted:", historyData?.length || 0);
-
+    // Delete profile image from storage
     if (user.img && user.img.includes('profile-img/')) {
       try {
         const fileName = user.img.split('/').pop();
         if (fileName) {
-          const { error: storageError } = await supabase.storage
-            .from("profile-img")
-            .remove([fileName]);
-
-          if (storageError) {
-            console.warn("Storage delete error:", {
-              message: storageError.message,
-              details: storageError.details,
-              code: storageError.code
-            });
-          } else {
-            console.log("Profile image deleted from storage:", fileName);
-          }
+          await supabase.storage.from("profile-img").remove([fileName]);
         }
       } catch (storageError) {
-        console.warn("Storage cleanup error:", {
-          message: storageError.message,
-          stack: storageError.stack
-        });
+        console.warn("Storage cleanup error:", storageError);
       }
     }
 
-    const { data: userData, error: userDeleteError } = await supabase
+    // Delete user account
+    const { error: userDeleteError } = await supabase
       .from("users")
       .delete()
-      .eq("user_id", req.user.user_id)
-      .select("user_id")
-      .single();
+      .eq("user_id", req.user.user_id);
 
     if (userDeleteError) {
-      console.error("User delete error:", {
-        message: userDeleteError.message,
-        details: userDeleteError.details,
-        code: userDeleteError.code,
-        hint: userDeleteError.hint
-      });
-      return res.send("Failed to delete user account");
-    }
-
-    if (!userData) {
-      console.warn("No user found with user_id:", req.user.user_id);
-      return res.send("User account not found");
+      console.error("User delete error:", userDeleteError);
+      return res.status(500).json({ error: "Failed to delete user account" });
     }
 
     console.log("Account deleted successfully for user:", req.user.user_id);
-    return res.json({ message: "Account deleted successfully" });
+    res.json({ message: "Account deleted successfully" });
   } catch (error) {
-    console.error("Delete account error:", {
-      message: error.message,
-      details: error.details,
-      code: error.code,
-      hint: error.hint,
-      stack: error.stack
-    });
-    return res.send("Failed to delete account");
+    console.error("Delete account error:", error);
+    res.status(500).json({ error: "Failed to delete account" });
   }
 });
+
 
 function validatePassword(password) {
   const minLength = 8;
@@ -283,8 +242,21 @@ function validatePassword(password) {
   return { isValid: true, message: "" };
 }
 
-router.use((req, res) => {
-  res.send("Route not found");
+// Add this middleware after your routes to handle multer errors
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
+    }
+    return res.status(400).json({ error: error.message });
+  }
+  
+  if (error.message === 'Only image files are allowed') {
+    return res.status(400).json({ error: 'Only image files are allowed' });
+  }
+  
+  console.error('Unhandled error:', error);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 export default router;

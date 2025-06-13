@@ -225,15 +225,6 @@ function updateQuickStats() {
   const totalEl = document.getElementById('total-predictions');
   if (totalEl) totalEl.textContent = dashboardData.totalSessions;
 
-  const weekEl = document.getElementById('week-predictions');
-  if (weekEl) {
-    // Show weekly stress level instead of count
-    if (dashboardData.weeklyStressLevel && dashboardData.weeklyCount > 0) {
-      weekEl.textContent = dashboardData.weeklyStressLevel;
-    } else {
-      weekEl.textContent = 'No data';
-    }
-  }
 
   const avgMoodEl = document.getElementById('avg-mood');
   if (avgMoodEl) {

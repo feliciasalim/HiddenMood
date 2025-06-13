@@ -11,7 +11,7 @@ import { renderAccount } from './presenters/accountPresenter.js';
 
 let isInitialLoad = true;
 
-window.loadView = async function (view, section) {
+window.loadView = async function (view) {
     if (!view) {
         const hash = window.location.hash.substring(1);
         view = hash || (sessionStorage.getItem('isLoggedIn') === 'true' ? 'curhat' : 'home');
@@ -86,7 +86,6 @@ window.loadView = async function (view, section) {
     if (renderFunction) {
         try {
             await renderFunction(); 
-            
             if (section) {
                 setTimeout(() => {
                     const targetElement = document.getElementById(section);

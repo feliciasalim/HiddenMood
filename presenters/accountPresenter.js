@@ -225,25 +225,30 @@ async function handleSettingsSubmit(e) {
             body: formData,
         });
 
-        if (!response.ok) {
-            let errorText = await response.text();
-            console.error("Update profile failed:", response.status, errorText);
-            throw new Error(`Failed to update profile: ${response.status} - ${errorText}`);
-        }
-
+        // Handle both JSON and text responses
+        let data;
         const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            let responseText = await response.text();
-            console.error("Non-JSON response:", responseText);
-            throw new Error("Non-JSON response from server");
+        
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const textResponse = await response.text();
+            data = { error: textResponse };
         }
 
-        const data = await response.json();
-        currentUser = data.user;
-        sessionStorage.setItem("user", JSON.stringify(currentUser));
-        
-        updateProfileUI();
+        if (!response.ok) {
+            console.error("Update profile failed:", response.status, data);
+            throw new Error(data.error || data.message || `HTTP ${response.status}`);
+        }
 
+        // Success - update UI
+        if (data.user) {
+            currentUser = data.user;
+            sessionStorage.setItem("user", JSON.stringify(currentUser));
+            updateProfileUI();
+        }
+
+        // Clear password fields
         const currentPasswordField = document.getElementById("current-password");
         const newPasswordField = document.getElementById("new-password");
         const confirmPasswordField = document.getElementById("confirm-password");
@@ -252,7 +257,8 @@ async function handleSettingsSubmit(e) {
         if (newPasswordField) newPasswordField.value = "";
         if (confirmPasswordField) confirmPasswordField.value = "";
 
-        showSuccess();
+        showSuccess("Profile updated successfully");
+
     } catch (error) {
         console.error("Error updating profile:", error);
         showError(error.message || "Failed to update profile");

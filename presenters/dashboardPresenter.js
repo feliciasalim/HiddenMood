@@ -97,10 +97,10 @@ async function loadDashboardSummary() {
     dashboardData.averageStress = data.averageStress || 0;
     dashboardData.emotionCounts = data.emotionCounts || {};
     dashboardData.stressHistory = data.stressHistory || [];
-    dashboardData.latestEmotion = data.latestEmotion || 'No data available';
+    dashboardData.latestEmotion = data.latestEmotion || '';
     dashboardData.totalSessions = data.totalCount || 0;
     dashboardData.weeklyStressLevel = data.weeklyAverageStress || 0; 
-    dashboardData.avgMood = data.mostCommonEmotion || '-';
+    dashboardData.avgMood = data.mostCommonEmotion || '';
     
     
   } catch (error) {
@@ -145,10 +145,102 @@ async function loadRecentHistory(limit = 10) {
   }
 }
 
+function updateStressLevel() {
+  const stressEl = document.getElementById('stress-percentage');
+  if (!stressEl) return;
+  
+  stressEl.textContent = `${dashboardData.averageStress}%`;
+  
+  if (dashboardData.averageStress >= 70) {
+    stressEl.className = 'text-4xl sm:text-6xl font-bold text-red-600 mb-3 sm:mb-4';
+  } else if (dashboardData.averageStress >= 40) {
+    stressEl.className = 'text-4xl sm:text-6xl font-bold text-yellow-600 mb-3 sm:mb-4';
+  } else {
+    stressEl.className = 'text-4xl sm:text-6xl font-bold text-green-600 mb-3 sm:mb-4';
+  }
+}
+
+// Update the updateLatestEmotion function
+function updateLatestEmotion() {
+  const latestEmotionCard = document.querySelector('[data-card="latest-emotion"]');
+  if (!latestEmotionCard) return;
+  
+  // Hide the entire latest emotion card if there's no data
+  if (!dashboardData.latestEmotion || dashboardData.totalSessions === 0) {
+    latestEmotionCard.style.display = 'none';
+    return;
+  }
+  
+  latestEmotionCard.style.display = 'block';
+  
+  const emojiEl = document.getElementById('latest-emotion-emoji');
+  const textEl = document.getElementById('latest-emotion-text');
+  
+  if (!emojiEl || !textEl) return;
+  
+  const emotion = dashboardData.latestEmotion.toLowerCase();
+  emojiEl.textContent = emotionEmojis[emotion] || '-';
+  textEl.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+}
+
+// Update the updateQuickStats function
+function updateQuickStats() {
+  const totalEl = document.getElementById('total-predictions');
+  if (totalEl) totalEl.textContent = dashboardData.totalSessions;
+
+  const weekEl = document.getElementById('week-predictions');
+  if (weekEl) {
+    if (dashboardData.weeklyStressLevel && dashboardData.weeklyStressLevel !== 'None') {
+      weekEl.textContent = dashboardData.weeklyStressLevel;
+    } else {
+      weekEl.textContent = '-';
+    }
+  }
+
+  const avgMoodEl = document.getElementById('avg-mood');
+  if (avgMoodEl) {
+    if (dashboardData.avgMood && dashboardData.avgMood !== 'No emotion entry') {
+      const mood = dashboardData.avgMood.charAt(0).toUpperCase() + dashboardData.avgMood.slice(1);
+      avgMoodEl.textContent = mood;
+    } else {
+      avgMoodEl.textContent = '-';
+    }
+  }
+}
+
+// Update the updateTips function
+function updateTips() {
+  const tipsEl = document.getElementById('stress-tips');
+  if (!tipsEl) return;
+  
+  tipsEl.innerHTML = '';
+  
+  // Check if there are any meaningful tips
+  if (dashboardData.tips.length === 0 || dashboardData.totalSessions === 0) {
+    const div = document.createElement('div');
+    div.className = 'text-sm text-gray-500 text-center py-4';
+    div.textContent = 'No recent tips';
+    tipsEl.appendChild(div);
+    return;
+  }
+  
+  dashboardData.tips.forEach(tip => {
+    const li = document.createElement('li');
+    li.className = 'flex items-start';
+    li.innerHTML = `
+      <span class="flex-shrink-0 w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3"></span>
+      <span class="text-sm text-gray-700">${tip}</span>
+    `;
+    tipsEl.appendChild(li);
+  });
+}
+
+// Update the loadStressTips function
 async function loadStressTips() {
   try {
     const tips = [];
 
+    // Only load tips if there are predictions
     if (dashboardData.recentPredictions.length > 0 && dashboardData.recentPredictions[0].feedback) {
       const feedback = dashboardData.recentPredictions[0].feedback;
       
@@ -171,63 +263,12 @@ async function loadStressTips() {
         }
       }
     }
-    dashboardData.tips = tips;
     
-    if (dashboardData.tips.length === 0) {
-      dashboardData.tips = [
-        '• Take regular breaks throughout the day',
-        '• Practice deep breathing exercises',
-        '• Maintain a consistent sleep schedule',
-        '• Engage in physical activities',
-        '• Try meditation or mindfulness exercises'
-      ];
-    }
+    dashboardData.tips = tips;
     
   } catch (error) {
     console.error('Error loading stress tips:', error);
-    dashboardData.tips = [
-      'No tips shown.'
-    ];
-  }
-}
-
-function updateStressLevel() {
-  const stressEl = document.getElementById('stress-percentage');
-  if (!stressEl) return;
-  
-  stressEl.textContent = `${dashboardData.averageStress}%`;
-  
-  if (dashboardData.averageStress >= 70) {
-    stressEl.className = 'text-4xl sm:text-6xl font-bold text-red-600 mb-3 sm:mb-4';
-  } else if (dashboardData.averageStress >= 40) {
-    stressEl.className = 'text-4xl sm:text-6xl font-bold text-yellow-600 mb-3 sm:mb-4';
-  } else {
-    stressEl.className = 'text-4xl sm:text-6xl font-bold text-green-600 mb-3 sm:mb-4';
-  }
-}
-
-function updateLatestEmotion() {
-  const emojiEl = document.getElementById('latest-emotion-emoji');
-  const textEl = document.getElementById('latest-emotion-text');
-  
-  if (!emojiEl || !textEl) return;
-  
-  const emotion = dashboardData.latestEmotion.toLowerCase();
-  emojiEl.textContent = emotionEmojis[emotion] || '😐';
-  textEl.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
-}
-
-function updateQuickStats() {
-  const totalEl = document.getElementById('total-predictions');
-  if (totalEl) totalEl.textContent = dashboardData.totalSessions;
-
-  const weekEl = document.getElementById('week-predictions');
-  if (weekEl) weekEl.textContent = `${dashboardData.weeklyStressLevel}%`;
-
-  const avgMoodEl = document.getElementById('avg-mood');
-  if (avgMoodEl) {
-    const mood = dashboardData.avgMood.charAt(0).toUpperCase() + dashboardData.avgMood.slice(1);
-    avgMoodEl.textContent = mood;
+    dashboardData.tips = [];
   }
 }
 
@@ -297,11 +338,8 @@ function updateEmotionTracker() {
       }
     });
   } else {
+    // Just show empty chart without text
     chartContext.clearRect(0, 0, ctx.width, ctx.height);
-    chartContext.fillStyle = '#6b7280';
-    chartContext.font = '14px sans-serif';
-    chartContext.textAlign = 'center';
-    chartContext.fillText('No data available', ctx.width / 2, ctx.height / 2);
   }
 }
 
@@ -315,44 +353,57 @@ function updateStressChart() {
   
   const chartContext = ctx.getContext('2d');
   
+  let labels = [];
+  let data = [];
+  
   if (dashboardData.stressHistory.length === 0) {
-    chartContext.clearRect(0, 0, ctx.width, ctx.height);
-    chartContext.fillStyle = '#6b7280';
-    chartContext.font = '14px sans-serif';
-    chartContext.textAlign = 'center';
-    chartContext.fillText('No stress data available', ctx.width / 2, ctx.height / 2);
-    return;
-  }
-  
-  const days = getCurrentFilterDays();
-  
-  const sortedHistory = [...dashboardData.stressHistory].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    return dateA - dateB;
-  });
-  
-  const labels = sortedHistory.map(item => {
-    const date = new Date(item.date);
+    const days = getCurrentFilterDays();
     
-    if (days <= 7) {
-      return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    } else if (days <= 30) {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const today = new Date();
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      
+      if (days <= 7) {
+        labels.push(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+      } else if (days <= 30) {
+        labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      } else {
+        labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      }
+      data.push(null); 
     }
-  });
-  
-  const data = sortedHistory.map(item => item.value || item.stress_percent || 0);
+  } else {
+    const days = getCurrentFilterDays();
+    
+    const sortedHistory = [...dashboardData.stressHistory].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
+    
+    labels = sortedHistory.map(item => {
+      const date = new Date(item.date);
+      
+      if (days <= 7) {
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      } else if (days <= 30) {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+    });
+    
+    data = sortedHistory.map(item => item.value || item.stress_percent || 0);
+  }
 
   let pointRadius = 4;
   let pointHoverRadius = 6;
   
-  if (sortedHistory.length > 30) {
+  if (labels.length > 30) {
     pointRadius = 2;
     pointHoverRadius = 4;
-  } else if (sortedHistory.length > 15) {
+  } else if (labels.length > 15) {
     pointRadius = 3;
     pointHoverRadius = 5;
   }
@@ -369,14 +420,16 @@ function updateStressChart() {
         tension: 0.4,
         fill: true,
         pointBackgroundColor: data.map(value => {
+          if (value === null) return 'transparent';
           if (value >= 70) return '#dc2626'; 
           if (value >= 40) return '#f59e0b'; 
           return '#10b981'; 
         }),
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
-        pointRadius: pointRadius,
-        pointHoverRadius: pointHoverRadius
+        pointRadius: data.map(value => value === null ? 0 : pointRadius),
+        pointHoverRadius: pointHoverRadius,
+        spanGaps: false
       }]
     },
     options: {
@@ -391,9 +444,18 @@ function updateStressChart() {
           display: false
         },
         tooltip: {
+          filter: function(tooltipItem) {
+            return tooltipItem.parsed.y !== null;
+          },
           callbacks: {
             title: function(context) {
+              if (dashboardData.stressHistory.length === 0) return '';
               const index = context[0].dataIndex;
+              const sortedHistory = [...dashboardData.stressHistory].sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return dateA - dateB;
+              });
               const date = new Date(sortedHistory[index].date);
               return date.toLocaleDateString('en-US', { 
                 weekday: 'long', 
@@ -403,6 +465,7 @@ function updateStressChart() {
               });
             },
             label: function(context) {
+              if (context.parsed.y === null) return '';
               return `Stress Level: ${context.parsed.y}%`;
             }
           }
@@ -427,8 +490,8 @@ function updateStressChart() {
             display: false
           },
           ticks: {
-            maxRotation: days > 30 ? 45 : 0,
-            maxTicksLimit: days <= 7 ? 7 : days <= 30 ? 15 : 20
+            maxRotation: labels.length > 30 ? 45 : 0,
+            maxTicksLimit: labels.length <= 7 ? 7 : labels.length <= 30 ? 15 : 20
           }
         }
       }
@@ -500,21 +563,6 @@ function updatePredictionsTable() {
   });
 }
 
-function updateTips() {
-  const tipsEl = document.getElementById('stress-tips');
-  if (!tipsEl) return;
-  
-  tipsEl.innerHTML = '';
-  dashboardData.tips.forEach(tip => {
-    const li = document.createElement('li');
-    li.className = 'flex items-start';
-    li.innerHTML = `
-      <span class="flex-shrink-0 w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3"></span>
-      <span class="text-sm text-gray-700">${tip}</span>
-    `;
-    tipsEl.appendChild(li);
-  });
-}
 
 function updateRecentActivity() {
   const activityEl = document.getElementById('recent-activity');
@@ -600,6 +648,7 @@ async function refreshDashboardData() {
     await loadStressTips();
     
     updateStressLevel();
+    updateLatestEmotion();
     updateQuickStats();
     updateStressChart();
     updateEmotionTracker();

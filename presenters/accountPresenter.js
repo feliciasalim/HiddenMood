@@ -92,7 +92,7 @@ function validatePassword(password) {
 }
 
 function handleProfileImageDisplay(imageElement) {
-    const defaultImage = 'https://via.placeholder.com/150x150/e2e8f0/64748b?text=User';
+    const defaultImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiBmaWxsPSIjZTJlOGYwIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNjAiIHI9IjIwIiBmaWxsPSIjNjQ3NDhiIi8+CjxwYXRoIGQ9Ik0zMCAxMjBjMC0yNSAyMC00NSA0NS00NXM0NSAyMCA0NSA0NXYxMEgzMHoiIGZpbGw9IiM2NDc0OGIiLz4KPHRleHQgeD0iNzUiIHk9IjE0MCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNjQ3NDhiIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5Vc2VyPC90ZXh0Pgo8L3N2Zz4K';
     
     try {
         if (!currentUser?.img) {
@@ -120,6 +120,7 @@ function handleProfileImageDisplay(imageElement) {
             }
         }
 
+        // Handle binary data
         if (currentUser.img && typeof currentUser.img === 'object' && currentUser.img.data) {
             const base64String = convertBinaryToBase64(currentUser.img.data);
             if (base64String) {
@@ -203,7 +204,7 @@ async function handleSettingsSubmit(e) {
 
     showLoading();
 
-    try {
+   try {
         const token = sessionStorage.getItem("token");
         const formData = new FormData();
         formData.append("name", username);
@@ -214,9 +215,22 @@ async function handleSettingsSubmit(e) {
         }
 
         if (profileImageInput && profileImageInput.files.length > 0) {
-            formData.append("profileImage", profileImageInput.files[0]);
+            const file = profileImageInput.files[0];
+            
+            // Additional client-side validation
+            if (file.size > 5 * 1024 * 1024) {
+                throw new Error("Image size should be less than 5MB");
+            }
+            
+            if (!file.type.startsWith('image/')) {
+                throw new Error("Please select an image file");
+            }
+            
+            formData.append("profileImage", file);
+            console.log("Uploading file:", file.name, file.type, file.size, "bytes");
         }
 
+        console.log("Sending update request...");
         const response = await fetch(`${API_BASE_URL}/api/profile`, {
             method: "PUT",
             headers: {
@@ -225,7 +239,9 @@ async function handleSettingsSubmit(e) {
             body: formData,
         });
 
-        // Handle both JSON and text responses
+        console.log("Response status:", response.status);
+        console.log("Response headers:", response.headers);
+
         let data;
         const contentType = response.headers.get("content-type");
         
@@ -233,19 +249,37 @@ async function handleSettingsSubmit(e) {
             data = await response.json();
         } else {
             const textResponse = await response.text();
+            console.log("Text response:", textResponse);
             data = { error: textResponse };
         }
 
+        console.log("Response data:", data);
+
         if (!response.ok) {
             console.error("Update profile failed:", response.status, data);
-            throw new Error(data.error || data.message || `HTTP ${response.status}`);
+            
+            // Handle specific error messages
+            if (data.error === "Failed to upload image") {
+                throw new Error("Failed to upload image. Please try again or choose a different image.");
+            } else if (data.error === "File too large. Maximum size is 5MB.") {
+                throw new Error("Image size should be less than 5MB");
+            } else if (data.error === "Only image files are allowed") {
+                throw new Error("Please select an image file");
+            }
+            
+            throw new Error(data.error || data.message || `Server error (${response.status})`);
         }
 
-        // Success - update UI
+        // Success
         if (data.user) {
             currentUser = data.user;
             sessionStorage.setItem("user", JSON.stringify(currentUser));
             updateProfileUI();
+            
+            // Clear the file input
+            if (profileImageInput) {
+                profileImageInput.value = '';
+            }
         }
 
         // Clear password fields

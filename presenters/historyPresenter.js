@@ -55,15 +55,12 @@ class HistoryPresenter {
   }
 
   groupFeedbacksByPeriod(feedbacks) {
-    // Since DB timestamps are already in Jakarta timezone, use them directly
     const now = new Date();
     
-    // Create date boundaries (date-only, no time)
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
     
-    // Start of current week (Monday)
     const startOfWeek = new Date(today);
     const dayOfWeek = today.getDay();
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; 
@@ -85,10 +82,8 @@ class HistoryPresenter {
     };
 
     feedbacks.forEach(feedback => {
-      // DB timestamp is already in Jakarta timezone, so use it directly
       const feedbackDate = new Date(feedback.created_at);
       
-      // Create date-only version for comparison
       const feedbackDateOnly = new Date(
         feedbackDate.getFullYear(), 
         feedbackDate.getMonth(), 
@@ -271,7 +266,6 @@ class HistoryView {
       const emotion = item.emotion || 'neutral';
       const text = item.text || 'No description';
       
-      // DB timestamp is already in Jakarta timezone, so use it directly
       const date = new Date(item.created_at);
 
       card.innerHTML = `
@@ -393,10 +387,8 @@ class HistoryView {
   }
 
   formatDate(date) {
-    // DB timestamp is already in Jakarta timezone, so use it directly
     const now = new Date();
     
-    // Create date-only versions for comparison
     const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     
@@ -421,15 +413,8 @@ const view = new HistoryView();
 view.presenter = new HistoryPresenter(view);
 
 function initializeHistory() {
+  console.log("Initializing history...");
   view.presenter.loadHistory();
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initializeHistory();
-  });
-} else {
-  initializeHistory();
 }
 
 export { HistoryPresenter, HistoryView, view };

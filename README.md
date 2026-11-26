@@ -118,13 +118,3 @@ Unlike chatbots (e.g., Wysa, Mindtera), HiMO focuses on text analysis for stress
 * \[10] Australian Government: [https://www.health.gov.au/ministers/the-hon-mark-butler-mp/media/delivering-high-quality-free-digital-mental-health-supports](https://www.health.gov.au/ministers/the-hon-mark-butler-mp/media/delivering-high-quality-free-digital-mental-health-supports)
 * \[11] MHCC: [https://mentalhealthcommission.ca/what-we-do/e-mental-health/](https://mentalhealthcommission.ca/what-we-do/e-mental-health/)
 
-## Developers
-
-**Coding Camp powered by DBS Foundation 2025**
-**CC25-CF050 Team**
-
-* (ML) MC319D5X0761 - Felicia Salim - Universitas Sumatera Utara
-* (ML) MC319D5X0793 - Nur Adilah - Universitas Sumatera Utara
-* (ML) MC012D5Y1825 - Muhammad Haifan Ghani - Universitas Telkom
-* (FEBE) FC325D5Y0730 - Gary Anderson Theng - Universitas Tarumanagara
-* (FEBE) FC012D5Y1749 - M Rivaldo Destadhio Hamzah - Universitas Telkom
